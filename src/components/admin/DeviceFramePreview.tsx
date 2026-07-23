@@ -15,7 +15,7 @@ export const DeviceFramePreview: React.FC<DeviceFramePreviewProps> = ({
       <div className="flex items-center justify-between bg-[#082d20] text-white p-3 rounded-2xl">
         <div className="flex items-center gap-2">
           <Eye className="w-5 h-5 text-[#ffd51f]" />
-          <span className="font-extrabold text-sm">Предпросмотр сайту на пристроях:</span>
+          <span className="font-extrabold text-sm">Попередній перегляд сайту на пристроях:</span>
         </div>
 
         <div className="flex items-center gap-1 bg-[#13563a] p-1 rounded-xl">

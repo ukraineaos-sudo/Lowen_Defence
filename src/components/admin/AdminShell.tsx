@@ -347,7 +347,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
           </button>
           <button type="button" onClick={() => navigate("preview")} className={tabClass("preview")}>
             <Monitor className="w-4 h-4" />
-            <span>Предпросмотр</span>
+            <span>Попередній перегляд</span>
           </button>
           <button type="button" onClick={() => navigate("history")} className={tabClass("history")}>
             <HistoryIcon className="w-4 h-4" />

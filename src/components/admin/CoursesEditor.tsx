@@ -251,7 +251,7 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
                     {course.featured && (
                       <span className="bg-[#ffd51f] text-[#082d20] text-xs font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1">
                         <Sparkles className="w-3 h-3" />
-                        <span>Головна карточка</span>
+                        <span>Головна картка</span>
                       </span>
                     )}
                   </div>
@@ -343,7 +343,7 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
 
                   <div>
                     <label className="block text-xs font-bold text-[#082d20] mb-1">
-                      Подпись к цене
+                      Підпис до ціни
                     </label>
                     <input
                       type="text"
@@ -375,7 +375,7 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
                 {/* Metadata List Editor */}
                 <div>
                   <label className="block text-xs font-bold text-[#082d20] mb-1">
-                    Параметри (бейджи форми)
+                    Параметри (мітки форми)
                   </label>
                   <div className="flex flex-wrap gap-2 items-center">
                     {course.meta.map((m, idx) => (
