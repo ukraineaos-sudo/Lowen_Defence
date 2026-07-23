@@ -4,7 +4,7 @@ import {
   SESSION_COOKIE,
   type SessionPayload,
 } from "./session-edge";
-import { runtimeEnv } from "@/lib/env";
+import { runtimeEnv, dataBlobToken, mediaBlobToken } from "@/lib/env";
 
 export { SESSION_COOKIE };
 export type { SessionPayload };
@@ -62,10 +62,7 @@ export function sessionCookieOptions(maxAgeSeconds = SESSION_TTL_MS / 1000) {
 }
 
 export function isStorageConfigured(): boolean {
-  return Boolean(
-    runtimeEnv("DATA_BLOB_READ_WRITE_TOKEN") ||
-      runtimeEnv("MEDIA_BLOB_READ_WRITE_TOKEN")
-  );
+  return Boolean(dataBlobToken() || mediaBlobToken());
 }
 
 export function getAdminUsername(): string {

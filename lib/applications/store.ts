@@ -3,13 +3,13 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import type { CourseApplication, ApplicationStatus } from "@/src/types/application";
-import { runtimeEnv } from "@/lib/env";
+import { dataBlobToken } from "@/lib/env";
 
 const APPS_PREFIX = "applications/";
 const LOCAL_APPS = path.join(process.cwd(), "data", "applications");
 
 function dataToken(): string | undefined {
-  return runtimeEnv("DATA_BLOB_READ_WRITE_TOKEN");
+  return dataBlobToken();
 }
 
 function appPathname(app: CourseApplication): string {

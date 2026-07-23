@@ -2,13 +2,13 @@ import { put } from "@vercel/blob";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
-import { runtimeEnv } from "@/lib/env";
+import { mediaBlobToken } from "@/lib/env";
 
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_BYTES = 10 * 1024 * 1024;
 
 function mediaToken(): string | undefined {
-  return runtimeEnv("MEDIA_BLOB_READ_WRITE_TOKEN");
+  return mediaBlobToken();
 }
 
 export function isMediaStoreConfigured(): boolean {
