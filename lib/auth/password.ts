@@ -1,7 +1,16 @@
-import { createHash, createHmac, scryptSync, timingSafeEqual } from "crypto";
+import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from "crypto";
 
 /**
- * Verify admin password against scrypt/pbkdf2/sha256 hash from env.
+ * Hash password with scrypt (same format as scripts/generate-credentials).
+ */
+export function hashPassword(password: string): string {
+  const salt = randomBytes(16).toString("hex");
+  const derivedKey = scryptSync(password, Buffer.from(salt, "hex"), 64);
+  return `scrypt:${salt}:${derivedKey.toString("hex")}`;
+}
+
+/**
+ * Verify admin password against scrypt/pbkdf2/sha256 hash from env/store.
  */
 export function verifyPassword(inputPassword: string, targetHash?: string): boolean {
   if (!targetHash || !targetHash.trim()) return false;
@@ -62,6 +71,10 @@ export function verifyPassword(inputPassword: string, targetHash?: string): bool
 
 export function signPayload(payload: string, secret: string): string {
   return createHmac("sha256", secret).update(payload).digest("base64url");
+}
+
+export function generateAuthSecret(): string {
+  return randomBytes(32).toString("hex");
 }
 
 export function timingSafeEqualString(a: string, b: string): boolean {

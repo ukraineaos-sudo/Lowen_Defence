@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { assertSameOrigin } from "@/lib/auth/csrf";
 import { verifyPassword } from "@/lib/auth/password";
+import { getActivePasswordHash } from "@/lib/auth/password-store";
 import {
   SESSION_COOKIE,
   createSessionToken,
@@ -8,18 +9,19 @@ import {
   isStorageConfigured,
   sessionCookieOptions,
 } from "@/lib/auth/session";
+import { runtimeEnv } from "@/lib/env";
 
 export async function POST(req: NextRequest) {
   if (!assertSameOrigin(req)) {
     return NextResponse.json({ error: "Невірний Origin" }, { status: 403 });
   }
 
-  const secret = process.env["AUTH_SECRET"]?.trim();
-  const passwordHash = process.env["ADMIN_PASSWORD_HASH"]?.trim();
+  const secret = runtimeEnv("AUTH_SECRET");
+  const passwordHash = await getActivePasswordHash();
 
   if (!secret || !passwordHash) {
     return NextResponse.json(
-      { error: "Авторизацію не налаштовано (відсутні AUTH_SECRET / ADMIN_PASSWORD_HASH)" },
+      { error: "Авторизацію не налаштовано (відсутні AUTH_SECRET / пароль)" },
       { status: 503 }
     );
   }

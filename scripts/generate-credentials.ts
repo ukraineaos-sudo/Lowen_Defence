@@ -1,19 +1,11 @@
-import crypto from "crypto";
+import { hashPassword, generateAuthSecret } from "../lib/auth/password";
 
 /**
  * Löwen Defence® Credentials & Security Helper
  * Generates secure ADMIN_PASSWORD_HASH and AUTH_SECRET.
  */
 
-export function hashPassword(password: string): string {
-  const salt = crypto.randomBytes(16).toString("hex");
-  const derivedKey = crypto.scryptSync(password, Buffer.from(salt, "hex"), 64);
-  return `scrypt:${salt}:${derivedKey.toString("hex")}`;
-}
-
-export function generateAuthSecret(): string {
-  return crypto.randomBytes(32).toString("hex");
-}
+export { hashPassword, generateAuthSecret };
 
 function main() {
   const args = process.argv.slice(2);

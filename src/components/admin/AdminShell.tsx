@@ -11,6 +11,7 @@ import { ContactsEditor } from "./ContactsEditor";
 import { ApplicationsManager } from "./ApplicationsManager";
 import { HistoryManager } from "./HistoryManager";
 import { DeviceFramePreview } from "./DeviceFramePreview";
+import { PasswordChangeForm } from "./PasswordChangeForm";
 import { PublicSite } from "@/components/PublicSite";
 import {
   Shield,
@@ -28,6 +29,7 @@ import {
   Loader2,
   Monitor,
   LayoutDashboard,
+  KeyRound,
 } from "lucide-react";
 
 export type AdminSection =
@@ -37,7 +39,8 @@ export type AdminSection =
   | "team"
   | "contacts"
   | "preview"
-  | "history";
+  | "history"
+  | "security";
 
 interface AdminShellProps {
   initialContent: SiteContent;
@@ -118,6 +121,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
       contacts: "/admin/contacts",
       preview: "/admin/preview",
       history: "/admin/history",
+      security: "/admin/security",
     };
     router.push(map[next]);
   };
@@ -349,6 +353,10 @@ export const AdminShell: React.FC<AdminShellProps> = ({
             <HistoryIcon className="w-4 h-4" />
             <span>Історія версій</span>
           </button>
+          <button type="button" onClick={() => navigate("security")} className={tabClass("security")}>
+            <KeyRound className="w-4 h-4" />
+            <span>Пароль</span>
+          </button>
         </div>
       </header>
 
@@ -461,6 +469,8 @@ export const AdminShell: React.FC<AdminShellProps> = ({
             }}
           />
         )}
+
+        {section === "security" && <PasswordChangeForm />}
       </main>
     </div>
   );
