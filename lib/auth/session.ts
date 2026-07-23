@@ -4,6 +4,7 @@ import {
   SESSION_COOKIE,
   type SessionPayload,
 } from "./session-edge";
+import { runtimeEnv } from "@/lib/env";
 
 export { SESSION_COOKIE };
 export type { SessionPayload };
@@ -11,9 +12,7 @@ export type { SessionPayload };
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 
 function getAuthSecret(): string | null {
-  const secret = process.env.AUTH_SECRET?.trim();
-  if (!secret) return null;
-  return secret;
+  return runtimeEnv("AUTH_SECRET") || null;
 }
 
 export function createSessionToken(username: string): string | null {
@@ -64,11 +63,11 @@ export function sessionCookieOptions(maxAgeSeconds = SESSION_TTL_MS / 1000) {
 
 export function isStorageConfigured(): boolean {
   return Boolean(
-    process.env.DATA_BLOB_READ_WRITE_TOKEN?.trim() ||
-      process.env.MEDIA_BLOB_READ_WRITE_TOKEN?.trim()
+    runtimeEnv("DATA_BLOB_READ_WRITE_TOKEN") ||
+      runtimeEnv("MEDIA_BLOB_READ_WRITE_TOKEN")
   );
 }
 
 export function getAdminUsername(): string {
-  return process.env.ADMIN_USERNAME?.trim() || "admin";
+  return runtimeEnv("ADMIN_USERNAME") || "admin";
 }

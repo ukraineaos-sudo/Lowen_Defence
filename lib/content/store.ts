@@ -4,6 +4,7 @@ import path from "path";
 import { defaultSiteContent } from "@/src/data/default-site-content";
 import type { ContentHistoryBackup, SiteContent } from "@/src/types/content";
 import { validateSiteContent } from "./validate";
+import { runtimeEnv } from "@/lib/env";
 
 const CONTENT_PATH = "content/current/site-content.json";
 const HISTORY_PREFIX = "content/history/";
@@ -14,7 +15,7 @@ const LOCAL_CONTENT = path.join(LOCAL_DATA, "site-content.json");
 const LOCAL_HISTORY = path.join(LOCAL_DATA, "history");
 
 function dataToken(): string | undefined {
-  return process.env.DATA_BLOB_READ_WRITE_TOKEN?.trim() || undefined;
+  return runtimeEnv("DATA_BLOB_READ_WRITE_TOKEN");
 }
 
 export function isDataStoreConfigured(): boolean {

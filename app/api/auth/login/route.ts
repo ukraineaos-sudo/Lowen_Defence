@@ -14,8 +14,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Невірний Origin" }, { status: 403 });
   }
 
-  const secret = process.env.AUTH_SECRET?.trim();
-  const passwordHash = process.env.ADMIN_PASSWORD_HASH?.trim();
+  const secret = process.env["AUTH_SECRET"]?.trim();
+  const passwordHash = process.env["ADMIN_PASSWORD_HASH"]?.trim();
 
   if (!secret || !passwordHash) {
     return NextResponse.json(
