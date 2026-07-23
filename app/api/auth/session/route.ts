@@ -1,3 +1,6 @@
+/**
+ * auth/session — стан сесії + storageConfigured
+ */
 import { NextResponse } from "next/server";
 import {
   getSessionFromCookies,

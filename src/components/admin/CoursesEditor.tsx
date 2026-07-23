@@ -1,3 +1,6 @@
+/**
+ * CoursesEditor.tsx — CRUD курсів у адмінці
+ */
 import React, { useState } from "react";
 import { Course } from "../../types/content";
 import { ImageFocalPointPicker } from "./ImageFocalPointPicker";
@@ -26,6 +29,7 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
 }) => {
   const [editingId, setEditingId] = useState<string | null>(courses[0]?.id || null);
 
+  // --- 1. Порядок / enabled / featured ---
   const moveCourse = (index: number, direction: "up" | "down") => {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= courses.length) return;
@@ -63,6 +67,7 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
     onChange(updated);
   };
 
+  // --- 2. Додати / дублювати / видалити ---
   const addCourse = () => {
     const newId = `course-${Date.now()}`;
     const newCourse: Course = {
@@ -114,7 +119,7 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      {/* Course List Sidebar */}
+      {/* --- 3. Список курсів (ліва колонка) --- */}
       <div className="lg:col-span-5 space-y-3">
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-black text-lg text-[#082d20]">Список програм</h3>
@@ -235,6 +240,7 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
       </div>
 
       {/* Course Edit Form */}
+      {/* --- 4. Форма редагування обраного курсу --- */}
       <div className="lg:col-span-7 bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-4">
         {editingId ? (
           (() => {

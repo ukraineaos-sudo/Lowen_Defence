@@ -1,3 +1,7 @@
+/**
+ * lib/auth/password-store.ts — збережений хеш пароля адміна
+ * Private Blob + локальний fallback; env — лише стартовий bootstrap.
+ */
 import { list, put } from "@vercel/blob";
 import fs from "fs";
 import path from "path";
@@ -6,6 +10,7 @@ import { dataBlobToken, runtimeEnv } from "@/lib/env";
 const HASH_PATH = "auth/admin-password-hash.txt";
 const LOCAL_HASH = path.join(process.cwd(), "data", "admin-password-hash.txt");
 
+/** 1. Читання хешу з Blob / локального файлу. */
 async function readHashFromBlob(): Promise<string | null> {
   const token = dataBlobToken();
   if (!token) return null;
@@ -35,9 +40,7 @@ function readHashFromLocal(): string | null {
   }
 }
 
-/**
- * Active password hash: stored override (Blob/local) → env bootstrap.
- */
+/** 2. Активний хеш: store → env.ADMIN_PASSWORD_HASH. */
 export async function getActivePasswordHash(): Promise<string | null> {
   const fromBlob = await readHashFromBlob();
   if (fromBlob) return fromBlob;
@@ -46,6 +49,7 @@ export async function getActivePasswordHash(): Promise<string | null> {
   return runtimeEnv("ADMIN_PASSWORD_HASH") || null;
 }
 
+/** 3. Записати новий хеш (зміна пароля в адмінці). */
 export async function writePasswordHash(
   hash: string
 ): Promise<{ success: boolean; error?: string }> {

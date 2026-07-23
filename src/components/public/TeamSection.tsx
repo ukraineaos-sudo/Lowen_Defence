@@ -1,3 +1,6 @@
+/**
+ * TeamSection.tsx — команда інструкторів
+ */
 import React from "react";
 import { TeamMember } from "../../types/content";
 import { ResponsiveImage } from "./ResponsiveImage";

@@ -1,3 +1,6 @@
+/**
+ * WhySection.tsx — блок «Чому ми»
+ */
 import React from "react";
 import { ShieldAlert, ArrowLeftRight, AlertTriangle, Hand } from "lucide-react";
 import { ResponsiveImage } from "./ResponsiveImage";

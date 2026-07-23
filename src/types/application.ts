@@ -1,3 +1,6 @@
+/**
+ * application.ts — типи заявок
+ */
 export type ApplicationStatus = "new" | "processed";
 
 export interface CourseApplication {

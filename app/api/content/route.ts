@@ -1,3 +1,6 @@
+/**
+ * content — публічний GET контенту
+ */
 import { NextResponse } from "next/server";
 import { readSiteContent } from "@/lib/content/store";
 

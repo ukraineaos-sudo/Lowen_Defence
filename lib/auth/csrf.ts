@@ -1,8 +1,10 @@
+/**
+ * lib/auth/csrf.ts — захист від CSRF
+ * Перевірка Origin/Referer на мутуючих admin/auth запитах.
+ */
 import { NextRequest } from "next/server";
 
-/**
- * Reject mutating requests without matching Origin/Referer (basic CSRF).
- */
+/** 1. Чи запит з того ж origin (або дозволений у dev без Origin). */
 export function assertSameOrigin(req: NextRequest): boolean {
   if (req.method === "GET" || req.method === "HEAD" || req.method === "OPTIONS") {
     return true;
@@ -12,6 +14,7 @@ export function assertSameOrigin(req: NextRequest): boolean {
   const host = req.headers.get("host");
   const siteUrl = process.env.SITE_URL?.replace(/\/$/, "");
 
+  // 1a. Origin збігається з Host / SITE_URL
   if (origin && host) {
     try {
       const originHost = new URL(origin).host;
@@ -22,6 +25,7 @@ export function assertSameOrigin(req: NextRequest): boolean {
     }
   }
 
+  // 1b. Fallback на Referer
   const referer = req.headers.get("referer");
   if (referer && host) {
     try {
@@ -33,7 +37,7 @@ export function assertSameOrigin(req: NextRequest): boolean {
     }
   }
 
-  // Local tooling / same-origin fetch without Origin in some browsers
+  // 1c. Локальні інструменти без Origin
   if (process.env.NODE_ENV !== "production" && !origin) {
     return true;
   }

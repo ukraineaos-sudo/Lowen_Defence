@@ -1,3 +1,6 @@
+/**
+ * AdminShell.tsx — оболонка адмінки: сесія, save, таби, editors
+ */
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -64,6 +67,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [storageConfigured, setStorageConfigured] = useState<boolean | null>(null);
 
+  // --- 1. Unsaved: порівняння draft vs збереженого ---
   useEffect(() => {
     setHasUnsavedChanges(
       JSON.stringify(content) !== JSON.stringify(savedContent)
@@ -80,6 +84,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [hasUnsavedChanges]);
 
+  // --- 2. Session / storageConfigured з API ---
   useEffect(() => {
     fetch("/api/auth/session", fetchOpts)
       .then((res) => res.json())
@@ -91,6 +96,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
       .catch(() => {});
   }, []);
 
+  // --- 3. Заявки: список + polling ---
   const fetchApplications = async () => {
     try {
       const res = await fetch("/api/admin/applications", fetchOpts);
@@ -109,6 +115,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     return () => clearInterval(interval);
   }, []);
 
+  // --- 4. Навігація між /admin/* ---
   const navigate = (next: AdminSection) => {
     if (hasUnsavedChanges && !confirm("Є незбережені зміни. Перейти без збереження?")) {
       return;
@@ -126,6 +133,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     router.push(map[next]);
   };
 
+  // --- 5. Зберегти / скасувати контент ---
   const handleSaveContent = async () => {
     setSaving(true);
     setSaveSuccess(false);
@@ -160,6 +168,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     }
   };
 
+  // --- 6. Статус / видалення заявок ---
   const handleUpdateApplicationStatus = async (
     id: string,
     status: ApplicationStatus
@@ -189,6 +198,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     }
   };
 
+  // --- 7. Logout ---
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
@@ -212,6 +222,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
 
   return (
     <div className="min-h-screen bg-[#f1f5f3] text-[#13241c] flex flex-col">
+      {/* --- 8. Header: бренд, бейджі, Save / сайт / logout --- */}
       <header className="bg-[#082d20] text-white sticky top-0 z-50 border-b border-[#13563a] shadow-md">
         <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -319,6 +330,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
           </div>
         </div>
 
+        {/* --- 9. Таби секцій --- */}
         <div className="max-w-7xl mx-auto px-4 flex items-center gap-1 overflow-x-auto text-xs font-extrabold pb-2">
           <button type="button" onClick={() => navigate("dashboard")} className={tabClass("dashboard")}>
             <LayoutDashboard className="w-4 h-4" />
@@ -360,6 +372,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
         </div>
       </header>
 
+      {/* --- 10. Тіло: dashboard / editors за section --- */}
       <main className="max-w-7xl mx-auto w-full px-4 py-6 flex-1">
         {storageConfigured === false && (
           <div className="mb-4 p-3 bg-amber-50 border border-amber-300 text-amber-900 rounded-xl flex items-center gap-2 text-xs font-bold">

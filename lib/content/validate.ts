@@ -1,6 +1,11 @@
+/**
+ * lib/content/validate.ts — Zod-валідація SiteContent
+ * Структура JSON + безпечні URL + один featured-курс.
+ */
 import { z } from "zod";
 import type { SiteContent } from "@/src/types/content";
 
+/** 1. Схеми полів (image / course / team / contacts). */
 const responsiveImageSchema = z.object({
   url: z.string(),
   alt: z.string(),
@@ -55,6 +60,7 @@ export const siteContentSchema = z.object({
 
 const UNSAFE_PROTOCOLS = /^(javascript|data|vbscript):/i;
 
+/** 2. Перевірка небезпечних протоколів у посиланнях. */
 export function isSafeUrl(value: string): boolean {
   const v = value.trim();
   if (!v) return true;
@@ -70,6 +76,7 @@ export function isSafeUrl(value: string): boolean {
   }
 }
 
+/** 3. Повна валідація payload перед записом. */
 export function validateSiteContent(input: unknown): {
   ok: true;
   content: SiteContent;

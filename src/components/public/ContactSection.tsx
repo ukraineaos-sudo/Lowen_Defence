@@ -1,3 +1,7 @@
+/**
+ * ContactSection.tsx — контакти + форма заявки
+ * POST /api/applications (honeypot/timing).
+ */
 import React, { useState, useEffect } from "react";
 import { Contacts, Course } from "../../types/content";
 import { Phone, Mail, Globe, Send, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
@@ -29,6 +33,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
   const [submitted, setSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // --- 1. Preselect курсу з картки + submit заявки ---
   // Sync selected course from parent if triggered by card click
   useEffect(() => {
     if (selectedCourseId) {
@@ -82,6 +87,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
 
   return (
     <section id="contact">
+      {/* --- 2. Копірайт + контакти зліва --- */}
       <div className="container contact-wrap">
         <div className="contact-copy">
           <span className="eyebrow" style={{ color: "#d4eadb" }}>
@@ -114,6 +120,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
           </div>
         </div>
 
+        {/* --- 3. Форма заявки --- */}
         <form className="contact-form" onSubmit={handleSubmit}>
           {submitted ? (
             <div className="py-12 text-center flex flex-col items-center justify-center">

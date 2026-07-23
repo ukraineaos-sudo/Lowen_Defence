@@ -1,3 +1,7 @@
+/**
+ * TeamEditor.tsx — редактор команди в адмінці
+ * Список учасників, enabled/порядок, фото + опис.
+ */
 import React, { useState } from "react";
 import { TeamMember } from "../../types/content";
 import { ImageFocalPointPicker } from "./ImageFocalPointPicker";
@@ -16,6 +20,7 @@ export const TeamEditor: React.FC<TeamEditorProps> = ({
 }) => {
   const [editingId, setEditingId] = useState<string | null>(team[0]?.id || null);
 
+  // --- 1. Порядок / enabled / CRUD учасника ---
   const moveMember = (index: number, direction: "up" | "down") => {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= team.length) return;
@@ -75,7 +80,7 @@ export const TeamEditor: React.FC<TeamEditorProps> = ({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      {/* Team List Sidebar */}
+      {/* --- 2. Список команди (ліва колонка) --- */}
       <div className="lg:col-span-5 space-y-3">
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-black text-lg text-[#082d20]">Команда ({team.length})</h3>
@@ -167,6 +172,7 @@ export const TeamEditor: React.FC<TeamEditorProps> = ({
       </div>
 
       {/* Member Edit Form */}
+      {/* --- 3. Форма обраного учасника --- */}
       <div className="lg:col-span-7 bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-4">
         {editingId ? (
           (() => {

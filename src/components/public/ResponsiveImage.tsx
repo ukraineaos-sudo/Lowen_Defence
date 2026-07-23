@@ -1,3 +1,6 @@
+/**
+ * ResponsiveImage.tsx — img з object-position від focalX/Y
+ */
 import React, { useState } from "react";
 import { ResponsiveImageData } from "../../types/content";
 import { ShieldAlert } from "lucide-react";

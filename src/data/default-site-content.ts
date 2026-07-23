@@ -1,3 +1,6 @@
+/**
+ * default-site-content.ts — дефолтний контент сайту (bootstrap)
+ */
 import { SiteContent } from "../types/content";
 
 export const defaultSiteContent: SiteContent = {

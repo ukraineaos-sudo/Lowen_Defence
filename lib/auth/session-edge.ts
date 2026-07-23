@@ -1,3 +1,8 @@
+/**
+ * lib/auth/session-edge.ts — перевірка сесії в Edge (middleware)
+ * Web Crypto HMAC; без Node crypto.
+ */
+
 export const SESSION_COOKIE = "ld_admin_token";
 
 export type SessionPayload = {
@@ -5,6 +10,7 @@ export type SessionPayload = {
   exp: number;
 };
 
+/** 1. Допоміжні: bytes ↔ base64url / utf8. */
 function bytesToBase64Url(bytes: Uint8Array): string {
   let binary = "";
   for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!);
@@ -20,7 +26,7 @@ function base64UrlToUtf8(input: string): string {
   return new TextDecoder().decode(bytes);
 }
 
-/** Edge-safe verify using Web Crypto (for middleware). */
+/** 2. Перевірити підписаний cookie-токен (HMAC-SHA256 + TTL). */
 export async function verifySessionTokenEdge(
   token: string | undefined | null,
   secret: string

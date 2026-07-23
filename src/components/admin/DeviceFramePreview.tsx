@@ -1,3 +1,6 @@
+/**
+ * DeviceFramePreview.tsx — превʼю сайту в рамках пристроїв
+ */
 import React, { useState } from "react";
 import { Monitor, Tablet, Smartphone, Eye } from "lucide-react";
 

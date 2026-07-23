@@ -1,3 +1,6 @@
+/**
+ * Header.tsx — шапка сайту (навігація, CTA, mobile menu)
+ */
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Shield, Menu, X, ExternalLink } from "lucide-react";

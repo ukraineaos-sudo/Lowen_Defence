@@ -1,3 +1,6 @@
+/**
+ * ContactsEditor.tsx — редактор контактів
+ */
 import React from "react";
 import { Contacts } from "../../types/content";
 import { Phone, Mail, Globe, ExternalLink } from "lucide-react";
@@ -11,6 +14,7 @@ export const ContactsEditor: React.FC<ContactsEditorProps> = ({
   contacts,
   onChange,
 }) => {
+  // --- 1. Патч одного поля Contacts ---
   const handleChange = (field: keyof Contacts, value: string) => {
     onChange({ ...contacts, [field]: value });
   };

@@ -1,3 +1,6 @@
+/**
+ * HistoryManager.tsx — історія версій контенту + rollback
+ */
 import React, { useState, useEffect } from "react";
 import { ContentHistoryBackup, SiteContent } from "../../types/content";
 import { History, RotateCcw, Clock, ShieldAlert } from "lucide-react";
@@ -11,6 +14,7 @@ export const HistoryManager: React.FC<HistoryManagerProps> = ({ onRestore }) => 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // --- 1. Завантажити список backup ---
   const fetchHistory = async () => {
     setLoading(true);
     try {
@@ -32,6 +36,7 @@ export const HistoryManager: React.FC<HistoryManagerProps> = ({ onRestore }) => 
     fetchHistory();
   }, []);
 
+  // --- 2. Rollback обраної версії ---
   const handleRollback = async (backup: ContentHistoryBackup) => {
     if (
       !confirm(

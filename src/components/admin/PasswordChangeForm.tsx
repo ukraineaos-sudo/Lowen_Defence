@@ -1,3 +1,6 @@
+/**
+ * PasswordChangeForm.tsx — зміна пароля адміна
+ */
 "use client";
 
 import React, { useState } from "react";
@@ -11,6 +14,7 @@ export const PasswordChangeForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // --- 1. Валідація + POST /api/admin/password ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);

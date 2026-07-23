@@ -20,3 +20,4 @@ bun.lock
 src/vite-env.d.ts
 src/assets/
 /assets/
+_incoming-favicons/

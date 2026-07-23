@@ -1,3 +1,7 @@
+/**
+ * ImageFocalPointPicker.tsx — фото + focal point
+ * Upload JPEG/PNG/WebP і точка обрізання.
+ */
 import React, { useRef, useState } from "react";
 import { ResponsiveImageData } from "../../types/content";
 import { Upload, Focus, RefreshCw, Smartphone, Monitor, Tablet } from "lucide-react";
@@ -22,6 +26,7 @@ export const ImageFocalPointPicker: React.FC<ImageFocalPointPickerProps> = ({
   const focalX = image.focalX ?? 50;
   const focalY = image.focalY ?? 50;
 
+  // --- 1. Клік = focal point у % ---
   const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
     if (!imageRef.current) return;
     const rect = imageRef.current.getBoundingClientRect();
@@ -38,6 +43,7 @@ export const ImageFocalPointPicker: React.FC<ImageFocalPointPickerProps> = ({
     });
   };
 
+  // --- 2. Upload → /api/admin/upload (fallback dataURL) ---
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -105,6 +111,7 @@ export const ImageFocalPointPicker: React.FC<ImageFocalPointPickerProps> = ({
 
   return (
     <div className="space-y-4 bg-[#f8faf8] border border-[#dbe5dd] rounded-2xl p-4">
+      {/* --- 3. Превʼю пристроїв + кнопка upload --- */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <label className="text-xs font-black uppercase tracking-wider text-[#082d20] flex items-center gap-1.5">
           <Focus className="w-4 h-4 text-[#28aa5b]" />

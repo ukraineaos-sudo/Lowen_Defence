@@ -1,3 +1,7 @@
+/**
+ * lib/applications/store.ts — заявки з форми
+ * CRUD у private Blob (applications/y/m/) або data/applications/.
+ */
 import { list, put, del } from "@vercel/blob";
 import fs from "fs";
 import path from "path";
@@ -19,6 +23,7 @@ function appPathname(app: CourseApplication): string {
   return `${APPS_PREFIX}${y}/${m}/${app.createdAt.replace(/[:.]/g, "-")}-${app.id}.json`;
 }
 
+/** 1. Створити заявку (публічна форма). */
 export async function createApplication(
   input: Omit<CourseApplication, "id" | "createdAt" | "updatedAt" | "status" | "processedAt">
 ): Promise<{ success: true; application: CourseApplication } | { success: false; error: string }> {
@@ -66,6 +71,7 @@ export async function createApplication(
   }
 }
 
+/** 2. Список заявок для адмінки (новіші зверху). */
 export async function listApplications(): Promise<CourseApplication[]> {
   const apps: CourseApplication[] = [];
   const token = dataToken();
@@ -119,6 +125,7 @@ export async function listApplications(): Promise<CourseApplication[]> {
   );
 }
 
+/** 3. Знайти blob заявки за id (для patch/delete). */
 async function findBlobByAppId(
   id: string
 ): Promise<{ pathname: string; url: string; app: CourseApplication } | null> {
@@ -143,6 +150,7 @@ async function findBlobByAppId(
   return null;
 }
 
+/** 4. Оновити статус (new / processed). */
 export async function updateApplicationStatus(
   id: string,
   status: ApplicationStatus
@@ -191,6 +199,7 @@ export async function updateApplicationStatus(
   }
 }
 
+/** 5. Видалити заявку. */
 export async function deleteApplication(
   id: string
 ): Promise<{ success: boolean; error?: string }> {

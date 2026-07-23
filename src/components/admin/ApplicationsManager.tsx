@@ -1,3 +1,7 @@
+/**
+ * ApplicationsManager.tsx — заявки в адмінці
+ * Фільтр, статус new/processed, видалення.
+ */
 import React, { useState } from "react";
 import { CourseApplication, ApplicationStatus } from "../../types/application";
 import { Phone, CheckCircle, Clock, Trash2, Search, Filter } from "lucide-react";
@@ -16,6 +20,7 @@ export const ApplicationsManager: React.FC<ApplicationsManagerProps> = ({
   const [filter, setFilter] = useState<"all" | "new" | "processed">("all");
   const [searchTerm, setSearchTerm] = useState("");
 
+  // --- 1. Фільтр статусу + пошук ---
   const filteredApps = applications.filter((app) => {
     if (filter === "new" && app.status !== "new") return false;
     if (filter === "processed" && app.status !== "processed") return false;
@@ -47,7 +52,7 @@ export const ApplicationsManager: React.FC<ApplicationsManagerProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Search & Status Filters */}
+      {/* --- 2. Панель пошуку / фільтрів --- */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-gray-200">
         <div className="relative w-full sm:w-72">
           <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -102,6 +107,7 @@ export const ApplicationsManager: React.FC<ApplicationsManagerProps> = ({
         </div>
       ) : (
         <div className="space-y-3">
+          {/* --- 3. Список карток заявок --- */}
           {filteredApps.map((app) => {
             const isNew = app.status === "new";
 

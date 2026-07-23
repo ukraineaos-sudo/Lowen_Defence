@@ -42,9 +42,14 @@ npm run generate:credentials
 
 1. Підключи репо до Vercel (Framework: Next.js)
 2. Додай env: `SITE_URL` (прод-домен), `ADMIN_*`, `AUTH_SECRET`, обидва Blob-токени
-3. Deploy → відкрий `/admin` → логін → правки → **Зберегти**
+3. Опційно email заявок (Brevo): `BREVO_API_KEY`, `NOTIFY_EMAIL_TO`, `NOTIFY_EMAIL_FROM`
+4. Deploy → відкрий `/admin` → логін → правки → **Зберегти**
 
 Публічний сайт читає контент server-side з private Blob (fallback на `src/data/default-site-content.ts`).
+
+### Email при заявці (Brevo)
+
+Після успішного збереження заявки сайт шле лист на `NOTIFY_EMAIL_TO`. Якщо ключа немає або Brevo впав — заявка в адмінці все одно є (`console.error` на сервері).
 
 ## Скрипти
 

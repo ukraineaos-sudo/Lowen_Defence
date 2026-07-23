@@ -1,3 +1,6 @@
+/**
+ * MethodSection.tsx — методика навчання
+ */
 import React from "react";
 import { ResponsiveImage } from "./ResponsiveImage";
 

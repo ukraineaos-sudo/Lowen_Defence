@@ -1,3 +1,6 @@
+/**
+ * AdminLogin.tsx — форма входу в /admin
+ */
 import React, { useState } from "react";
 import { Shield, Lock, User, AlertCircle, Loader2 } from "lucide-react";
 
@@ -12,6 +15,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onClose }) =>
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // --- 1. POST /api/auth/login ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);

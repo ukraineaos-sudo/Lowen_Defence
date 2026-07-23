@@ -1,3 +1,6 @@
+/**
+ * Footer.tsx — підвал: контакти, privacy
+ */
 import React from "react";
 import { Contacts } from "../../types/content";
 import { Shield, ExternalLink } from "lucide-react";

@@ -1,6 +1,9 @@
 /**
- * Read env at runtime (bracket access avoids Next build-time inlining of empty values).
+ * lib/env.ts — читання змінних оточення
+ * Runtime-доступ до env (у т.ч. Blob-токенів) без «залипання» порожніх значень на білді.
  */
+
+/** 1. Одне env-значення (trim, порожнє → undefined). */
 export function runtimeEnv(name: string): string | undefined {
   const value = process.env[name];
   if (typeof value !== "string") return undefined;
@@ -8,7 +11,7 @@ export function runtimeEnv(name: string): string | undefined {
   return trimmed.length ? trimmed : undefined;
 }
 
-/** First non-empty value among candidate env names. */
+/** 2. Перше непорожнє серед кількох імен (для alias Vercel). */
 export function runtimeEnvAny(...names: string[]): string | undefined {
   for (const name of names) {
     const value = runtimeEnv(name);
@@ -17,7 +20,7 @@ export function runtimeEnvAny(...names: string[]): string | undefined {
   return undefined;
 }
 
-/** Media Blob RW token (Vercel prefix quirk may append _READ_WRITE_TOKEN). */
+/** 3. Токен public Media Blob (коротке ім'я або …_READ_WRITE_TOKEN). */
 export function mediaBlobToken(): string | undefined {
   return runtimeEnvAny(
     "MEDIA_BLOB_READ_WRITE_TOKEN",
@@ -25,7 +28,7 @@ export function mediaBlobToken(): string | undefined {
   );
 }
 
-/** Private data Blob RW token. */
+/** 4. Токен private Data Blob (контент / заявки / пароль). */
 export function dataBlobToken(): string | undefined {
   return runtimeEnvAny(
     "DATA_BLOB_READ_WRITE_TOKEN",

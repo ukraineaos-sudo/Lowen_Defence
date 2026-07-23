@@ -1,3 +1,7 @@
+/**
+ * tsconfig.json — налаштування TypeScript
+ * Strict mode, path alias @/*, інтеграція з Next.js.
+ */
 {
   "compilerOptions": {
     "target": "ES2022",

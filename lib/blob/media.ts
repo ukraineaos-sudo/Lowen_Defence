@@ -1,3 +1,7 @@
+/**
+ * lib/blob/media.ts — завантаження фото (public Media Blob)
+ * JPEG/PNG/WebP ≤10MB; fallback у public/uploads/.
+ */
 import { put } from "@vercel/blob";
 import fs from "fs";
 import path from "path";
@@ -22,6 +26,7 @@ function extFromMime(mime: string): string {
   return "bin";
 }
 
+/** 1. Upload з data:URL → public URL (або /uploads/…). */
 export async function uploadImageFromDataUrl(
   dataUrl: string,
   folder: string

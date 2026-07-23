@@ -1,3 +1,6 @@
+/**
+ * FaqSection.tsx — FAQ акордеон
+ */
 import React, { useState } from "react";
 import { Plus, Minus } from "lucide-react";
 

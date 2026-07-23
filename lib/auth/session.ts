@@ -1,3 +1,7 @@
+/**
+ * lib/auth/session.ts — cookie-сесія адміна (Node runtime)
+ * Створення/перевірка токена, читання з cookies, прапорці сховища.
+ */
 import { cookies } from "next/headers";
 import { signPayload, timingSafeEqualString } from "./password";
 import {
@@ -15,6 +19,7 @@ function getAuthSecret(): string | null {
   return runtimeEnv("AUTH_SECRET") || null;
 }
 
+/** 1. Підписати нову сесію (username + exp, 12 год). */
 export function createSessionToken(username: string): string | null {
   const secret = getAuthSecret();
   if (!secret) return null;
@@ -27,6 +32,7 @@ export function createSessionToken(username: string): string | null {
   return `${body}.${sig}`;
 }
 
+/** 2. Перевірити токен (Node HMAC). */
 export function verifySessionToken(token: string | undefined | null): SessionPayload | null {
   if (!token) return null;
   const secret = getAuthSecret();
@@ -46,11 +52,13 @@ export function verifySessionToken(token: string | undefined | null): SessionPay
   }
 }
 
+/** 3. Сесія з HttpOnly cookie поточного запиту. */
 export async function getSessionFromCookies(): Promise<SessionPayload | null> {
   const jar = await cookies();
   return verifySessionToken(jar.get(SESSION_COOKIE)?.value);
 }
 
+/** 4. Опції Set-Cookie для логіну. */
 export function sessionCookieOptions(maxAgeSeconds = SESSION_TTL_MS / 1000) {
   return {
     httpOnly: true,
@@ -61,10 +69,12 @@ export function sessionCookieOptions(maxAgeSeconds = SESSION_TTL_MS / 1000) {
   };
 }
 
+/** 5. Чи є хоч один Blob-токен (банер у адмінці). */
 export function isStorageConfigured(): boolean {
   return Boolean(dataBlobToken() || mediaBlobToken());
 }
 
+/** 6. Логін адміна з env (дефолт admin). */
 export function getAdminUsername(): string {
   return runtimeEnv("ADMIN_USERNAME") || "admin";
 }

@@ -1,3 +1,6 @@
+/**
+ * page.tsx — головна: SSR контент → PublicSite
+ */
 import { readSiteContent } from "@/lib/content/store";
 import { PublicSite } from "@/components/PublicSite";
 

@@ -1,3 +1,6 @@
+/**
+ * admin/password — зміна пароля
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { assertSameOrigin } from "@/lib/auth/csrf";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";

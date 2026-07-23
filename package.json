@@ -2,6 +2,7 @@
   "name": "lowen-defence-ukraine",
   "private": true,
   "version": "1.0.0",
+  "description": "package.json — залежності та npm-скрипти (dev/build/start, генерація credentials)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

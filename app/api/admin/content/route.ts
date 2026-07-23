@@ -1,3 +1,6 @@
+/**
+ * admin/content — GET/POST контенту
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { assertSameOrigin } from "@/lib/auth/csrf";
 import { getSessionFromCookies } from "@/lib/auth/session";
@@ -7,6 +10,7 @@ async function requireAdmin() {
   return getSessionFromCookies();
 }
 
+// --- 1. GET: поточний SiteContent для адмінки ---
 export async function GET() {
   const session = await requireAdmin();
   if (!session) {
@@ -16,6 +20,7 @@ export async function GET() {
   return NextResponse.json(content);
 }
 
+// --- 2. POST: CSRF + запис контенту (із history) ---
 export async function POST(req: NextRequest) {
   if (!assertSameOrigin(req)) {
     return NextResponse.json({ error: "Невірний Origin" }, { status: 403 });

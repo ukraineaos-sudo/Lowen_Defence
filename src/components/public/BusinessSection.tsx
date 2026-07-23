@@ -1,3 +1,6 @@
+/**
+ * BusinessSection.tsx — корпоративні програми
+ */
 import React from "react";
 import { ResponsiveImage } from "./ResponsiveImage";
 import { ArrowRight, Building2, ShieldCheck, MessageSquare, Flame } from "lucide-react";

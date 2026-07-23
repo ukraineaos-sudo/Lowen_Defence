@@ -1,3 +1,6 @@
+/**
+ * Hero.tsx — головний екран лендингу
+ */
 import React from "react";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 

@@ -1,3 +1,6 @@
+/**
+ * auth/logout — скидання cookie
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { assertSameOrigin } from "@/lib/auth/csrf";
 import { SESSION_COOKIE } from "@/lib/auth/session";

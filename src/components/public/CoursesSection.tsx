@@ -1,3 +1,6 @@
+/**
+ * CoursesSection.tsx — каталог курсів
+ */
 import React from "react";
 import { Course } from "../../types/content";
 import { ResponsiveImage } from "./ResponsiveImage";

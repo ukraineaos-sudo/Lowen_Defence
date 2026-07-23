@@ -1,3 +1,6 @@
+/**
+ * admin/rollback — відкат версії
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { assertSameOrigin } from "@/lib/auth/csrf";
 import { getSessionFromCookies } from "@/lib/auth/session";

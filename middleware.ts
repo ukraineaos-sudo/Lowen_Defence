@@ -1,3 +1,7 @@
+/**
+ * Middleware — захист /admin
+ * Перевіряє cookie-сесію; без логіну редірект на /admin/login; noindex для адмінки.
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE, verifySessionTokenEdge } from "@/lib/auth/session-edge";
 

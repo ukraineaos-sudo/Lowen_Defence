@@ -1,3 +1,6 @@
+/**
+ * content.ts — типи SiteContent / Course / Team / Contacts
+ */
 export interface ResponsiveImageData {
   url: string;
   alt: string;

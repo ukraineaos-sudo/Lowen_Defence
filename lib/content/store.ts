@@ -1,3 +1,7 @@
+/**
+ * lib/content/store.ts — контент сайту (JSON)
+ * Читання/запис site-content + історія/rollback; Blob private або data/.
+ */
 import { list, put, del } from "@vercel/blob";
 import fs from "fs";
 import path from "path";
@@ -22,6 +26,7 @@ export function isDataStoreConfigured(): boolean {
   return Boolean(dataToken());
 }
 
+/** 1. Читання current (Blob → local → default). */
 async function readFromBlob(): Promise<SiteContent | null> {
   const token = dataToken();
   if (!token) return null;
@@ -60,6 +65,7 @@ export async function readSiteContent(): Promise<SiteContent> {
   return defaultSiteContent;
 }
 
+/** 2. Snapshot у history перед оновленням current (≤20 версій). */
 async function writeHistoryBlob(content: SiteContent, token: string) {
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const pathname = `${HISTORY_PREFIX}${stamp}-site-content.json`;
@@ -112,6 +118,7 @@ function writeHistoryLocal(content: SiteContent) {
   }
 }
 
+/** 3. Зберегти контент (валідація → history → current Blob/local). */
 export async function writeSiteContent(
   content: SiteContent
 ): Promise<{ success: boolean; error?: string; content?: SiteContent }> {
@@ -168,6 +175,7 @@ export async function writeSiteContent(
   return { success: true, content: next };
 }
 
+/** 4. Список резервних копій для адмінки. */
 export async function listContentHistory(): Promise<ContentHistoryBackup[]> {
   const token = dataToken();
   const backups: ContentHistoryBackup[] = [];
@@ -237,6 +245,7 @@ export async function listContentHistory(): Promise<ContentHistoryBackup[]> {
   return backups;
 }
 
+/** 5. Відкат: взяти backup і записати як нову current. */
 export async function rollbackContent(
   timestamp: string
 ): Promise<{ success: boolean; error?: string; content?: SiteContent }> {

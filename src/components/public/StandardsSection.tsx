@@ -1,3 +1,6 @@
+/**
+ * StandardsSection.tsx — стандарти / сертифікації
+ */
 import React from "react";
 
 export const StandardsSection: React.FC = () => {

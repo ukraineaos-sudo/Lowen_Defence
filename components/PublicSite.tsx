@@ -1,3 +1,6 @@
+/**
+ * PublicSite.tsx — збірка публічного лендингу з контенту
+ */
 "use client";
 
 import React, { useState } from "react";
@@ -25,6 +28,7 @@ export function PublicSite({ content, showAdminLink = true }: PublicSiteProps) {
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
 
+  // --- 1. Клік по курсу → скрол до #contact з preselect ---
   const handleSelectCourse = (courseId: string) => {
     setSelectedCourseId(courseId);
     const el = document.querySelector("#contact");
@@ -32,7 +36,9 @@ export function PublicSite({ content, showAdminLink = true }: PublicSiteProps) {
   };
 
   return (
-    <div id="top" className="min-h-screen bg-white text-[#13241c] flex flex-col">
+    <>
+      {/* --- 2. Розмітка секцій лендингу --- */}
+      <div id="top" className="min-h-screen bg-white text-[#13241c] flex flex-col">
       <Header showAdminLink={showAdminLink} />
 
       <main className="flex-1">
@@ -66,5 +72,6 @@ export function PublicSite({ content, showAdminLink = true }: PublicSiteProps) {
         onClose={() => setIsPrivacyOpen(false)}
       />
     </div>
+    </>
   );
 }
