@@ -39,18 +39,7 @@ export const BusinessSection: React.FC<BusinessSectionProps> = ({
             Для бізнесу та організацій
           </span>
           <h2>Corporate Awareness Training — Security</h2>
-          <p
-            className="section-lead"
-            style={{
-              width: "650px",
-              maxWidth: "100%",
-              fontSize: "20px",
-              lineHeight: "30.512px",
-              fontFamily: "Manrope, sans-serif",
-              fontWeight: "bold",
-              color: "#388c5a",
-            }}
-          >
+          <p className="section-lead">
             Працівники, які контактують з клієнтами та відвідувачами, можуть
             стикатися з образами, погрозами, агресією або нападом. Навчання поєднує
             комунікацію, деескалацію, правила поведінки у небезпеці та практичний

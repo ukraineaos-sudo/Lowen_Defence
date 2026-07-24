@@ -12,18 +12,19 @@ export const Hero: React.FC = () => {
 
   return (
     <section className="hero relative overflow-hidden" id="top">
-      {/* 3 Yellow diagonal decorative stripes behind shield (slanted bottom-left to top-right) */}
-      <div className="absolute right-0 top-0 bottom-0 w-full max-w-[700px] pointer-events-none z-0 overflow-hidden">
+      {/* 3 Yellow diagonal decorative stripes behind shield (slanted bottom-left to top-right).
+          Mobile (<992px): clip to right corridor so copy/CTA stay on green. Desktop unchanged. */}
+      <div className="absolute right-0 top-0 bottom-0 w-full max-w-[700px] pointer-events-none z-0 overflow-hidden max-[991px]:w-[34%] max-[991px]:max-w-none">
         <div 
-          className="absolute right-[10%] top-1/2 -translate-y-1/2 flex gap-7 sm:gap-10"
+          className="absolute right-[10%] top-1/2 -translate-y-1/2 flex gap-7 sm:gap-10 max-[991px]:right-[-18%] max-[991px]:gap-5"
           style={{ 
             transform: "rotate(35deg)", 
             transformOrigin: "center center" 
           }}
         >
-          <div className="w-12 sm:w-16 h-[1200px] bg-[#ffd51f]" />
-          <div className="w-12 sm:w-16 h-[1200px] bg-[#ffd51f]" />
-          <div className="w-12 sm:w-16 h-[1200px] bg-[#ffd51f]" />
+          <div className="w-12 sm:w-16 h-[1200px] bg-[#ffd51f] max-[991px]:w-10" />
+          <div className="w-12 sm:w-16 h-[1200px] bg-[#ffd51f] max-[991px]:w-10" />
+          <div className="w-12 sm:w-16 h-[1200px] bg-[#ffd51f] max-[991px]:w-10" />
         </div>
       </div>
 

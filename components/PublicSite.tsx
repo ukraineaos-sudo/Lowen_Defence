@@ -39,7 +39,10 @@ export function PublicSite({ content, showAdminLink = true }: PublicSiteProps) {
     <>
       {/* --- 2. Розмітка секцій лендингу --- */}
       <div id="top" className="min-h-screen bg-white text-[#13241c] flex flex-col">
-      <Header showAdminLink={showAdminLink} />
+      <Header
+        showAdminLink={showAdminLink}
+        germanWebsiteUrl={content.contacts.germanWebsiteUrl}
+      />
 
       <main className="flex-1">
         <Hero />

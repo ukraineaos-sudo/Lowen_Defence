@@ -18,11 +18,12 @@ export async function GET(req: NextRequest) {
   }
 
   const statusParam = req.nextUrl.searchParams.get("status");
-  let apps = await listApplications();
-  if (statusParam === "new" || statusParam === "processed") {
-    apps = apps.filter((a) => a.status === statusParam);
-  }
-  const newCount = (await listApplications()).filter((a) => a.status === "new").length;
+  const all = await listApplications();
+  const newCount = all.filter((a) => a.status === "new").length;
+  const apps =
+    statusParam === "new" || statusParam === "processed"
+      ? all.filter((a) => a.status === statusParam)
+      : all;
 
   return NextResponse.json({ applications: apps, newCount });
 }

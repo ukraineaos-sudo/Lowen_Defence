@@ -431,24 +431,40 @@ h2 {
   position: relative;
   border-radius: 28px;
   overflow: hidden;
-  height: 440px;
+  /* Match why-practice.png (~1280×961) so kids on the sides stay in frame */
+  height: auto;
+  aspect-ratio: 4 / 3;
   box-shadow: var(--shadow);
 }
 
 .why-quote {
   position: absolute;
-  bottom: 20px;
-  left: 20px;
-  right: 20px;
-  background: rgba(8, 45, 32, 0.88);
+  bottom: 8px;
+  left: 12px;
+  right: 12px;
+  background: rgba(8, 45, 32, 0.3);
   backdrop-filter: blur(12px);
   color: white;
-  padding: 20px 24px;
+  min-height: 75px;
+  max-height: 100px;
+  padding: 10px 16px;
   border-radius: 20px;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  line-height: 1.5;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 991px) {
+  .why-quote {
+    bottom: 6px;
+    left: 10px;
+    right: 10px;
+    padding: 8px 14px;
+    font-size: 0.85rem;
+  }
 }
 
 .risk-grid {
@@ -738,6 +754,10 @@ h2 {
 
 .business h2 {
   color: white;
+}
+
+.business .section-lead {
+  color: #cbe0d3;
 }
 
 .business-grid {

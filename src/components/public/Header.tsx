@@ -5,12 +5,19 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Shield, Menu, X, ExternalLink } from "lucide-react";
 
+const DEFAULT_GERMAN_SITE = "https://www.loewen-defence.de";
+
 interface HeaderProps {
   showAdminLink?: boolean;
+  germanWebsiteUrl?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ showAdminLink = true }) => {
+export const Header: React.FC<HeaderProps> = ({
+  showAdminLink = true,
+  germanWebsiteUrl,
+}) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const germanUrl = germanWebsiteUrl?.trim() || DEFAULT_GERMAN_SITE;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -85,7 +92,7 @@ export const Header: React.FC<HeaderProps> = ({ showAdminLink = true }) => {
             Команда
           </a>
           <a
-            href="https://loewen-defence.de"
+            href={germanUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1"

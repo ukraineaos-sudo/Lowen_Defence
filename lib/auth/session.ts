@@ -8,6 +8,7 @@ import {
   SESSION_COOKIE,
   type SessionPayload,
 } from "./session-edge";
+import { getActivePasswordHash } from "./password-store";
 import { runtimeEnv, dataBlobToken, mediaBlobToken } from "@/lib/env";
 
 export { SESSION_COOKIE };
@@ -19,13 +20,22 @@ function getAuthSecret(): string | null {
   return runtimeEnv("AUTH_SECRET") || null;
 }
 
-/** 1. Підписати нову сесію (username + exp, 12 год). */
-export function createSessionToken(username: string): string | null {
+/** Fingerprint активного пароля (для інвалідації сесій після зміни). */
+export function passwordVersion(hash: string, secret: string): string {
+  return signPayload(`pv:${hash}`, secret).slice(0, 24);
+}
+
+/** 1. Підписати нову сесію (username + exp + версія пароля, 12 год). */
+export function createSessionToken(
+  username: string,
+  passwordHash: string
+): string | null {
   const secret = getAuthSecret();
   if (!secret) return null;
   const payload: SessionPayload = {
     u: username,
     exp: Date.now() + SESSION_TTL_MS,
+    pv: passwordVersion(passwordHash, secret),
   };
   const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
   const sig = signPayload(body, secret);
@@ -52,10 +62,24 @@ export function verifySessionToken(token: string | undefined | null): SessionPay
   }
 }
 
-/** 3. Сесія з HttpOnly cookie поточного запиту. */
+/** 3. Сесія з HttpOnly cookie поточного запиту (+ перевірка версії пароля). */
 export async function getSessionFromCookies(): Promise<SessionPayload | null> {
   const jar = await cookies();
-  return verifySessionToken(jar.get(SESSION_COOKIE)?.value);
+  const payload = verifySessionToken(jar.get(SESSION_COOKIE)?.value);
+  if (!payload) return null;
+
+  // Токени з pv інвалідуються після зміни пароля.
+  // Старі токени без pv (до впровадження) лишаються дійсними до exp.
+  if (payload.pv) {
+    const secret = getAuthSecret();
+    const hash = secret ? await getActivePasswordHash() : null;
+    if (!secret || !hash) return null;
+    if (!timingSafeEqualString(payload.pv, passwordVersion(hash, secret))) {
+      return null;
+    }
+  }
+
+  return payload;
 }
 
 /** 4. Опції Set-Cookie для логіну. */

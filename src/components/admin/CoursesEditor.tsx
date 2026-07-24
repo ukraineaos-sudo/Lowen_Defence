@@ -19,13 +19,11 @@ import {
 interface CoursesEditorProps {
   courses: Course[];
   onChange: (updatedCourses: Course[]) => void;
-  authToken?: string;
 }
 
 export const CoursesEditor: React.FC<CoursesEditorProps> = ({
   courses,
   onChange,
-  authToken,
 }) => {
   const [editingId, setEditingId] = useState<string | null>(courses[0]?.id || null);
 
@@ -426,7 +424,6 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
                   onChange={(updatedImg) =>
                     updateCourse(course.id, { image: updatedImg })
                   }
-                  authToken={authToken}
                 />
               </div>
             );

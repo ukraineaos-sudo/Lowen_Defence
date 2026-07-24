@@ -10,13 +10,11 @@ import { ArrowUp, ArrowDown, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
 interface TeamEditorProps {
   team: TeamMember[];
   onChange: (updatedTeam: TeamMember[]) => void;
-  authToken?: string;
 }
 
 export const TeamEditor: React.FC<TeamEditorProps> = ({
   team,
   onChange,
-  authToken,
 }) => {
   const [editingId, setEditingId] = useState<string | null>(team[0]?.id || null);
 
@@ -233,7 +231,6 @@ export const TeamEditor: React.FC<TeamEditorProps> = ({
                   onChange={(updatedImg) =>
                     updateMember(member.id, { image: updatedImg })
                   }
-                  authToken={authToken}
                 />
               </div>
             );

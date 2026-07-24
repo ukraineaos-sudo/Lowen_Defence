@@ -4,18 +4,17 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createApplication } from "@/lib/applications/store";
+import {
+  evaluateFormTiming,
+  hasConsent,
+  isHoneypotTriggered,
+} from "@/lib/applications/form-guards";
 import { readSiteContent } from "@/lib/content/store";
 import { notifyApplicationByEmail } from "@/lib/mail/notify-application";
 import { clientIp, rateLimit } from "@/lib/security/rate-limit";
 
-const MIN_SUBMIT_MS = 2500;
-const MAX_FORM_AGE_MS = 2 * 60 * 60 * 1000; // 2 год
 const APPS_LIMIT = 5;
 const APPS_WINDOW_MS = 15 * 60 * 1000; // 5 заявок / 15 хв / IP
-
-function hasConsent(body: Record<string, unknown>): boolean {
-  return body.consent === true || body.consent === "true" || body.consent === 1;
-}
 
 export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
@@ -38,18 +37,23 @@ export async function POST(req: NextRequest) {
   }
 
   // --- 2. Антибот: honeypot + обовʼязковий час заповнення ---
-  if (body.honeypot || body.website || body.company_url || body.website_url_check) {
+  if (isHoneypotTriggered(body)) {
     return NextResponse.json({ success: true });
   }
 
-  const startedAt = Number(body._t || body.formStartedAt || 0);
-  if (!Number.isFinite(startedAt) || startedAt <= 0) {
-    // Немає _t — схоже на прямий POST; тиха відповідь без запису
+  const timing = evaluateFormTiming(body);
+  if (timing.status === "missing" || timing.status === "too_fast") {
     return NextResponse.json({ success: true });
   }
-  const age = Date.now() - startedAt;
-  if (age < MIN_SUBMIT_MS || age > MAX_FORM_AGE_MS) {
-    return NextResponse.json({ success: true });
+  if (timing.status === "expired") {
+    return NextResponse.json(
+      {
+        error:
+          "Сесія форми застаріла. Оновіть сторінку або спробуйте надіслати заявку ще раз.",
+        code: "FORM_EXPIRED",
+      },
+      { status: 400 }
+    );
   }
 
   // --- 3. Consent на сервері ---

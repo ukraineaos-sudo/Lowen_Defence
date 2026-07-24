@@ -8,6 +8,8 @@ export const SESSION_COOKIE = "ld_admin_token";
 export type SessionPayload = {
   u: string;
   exp: number;
+  /** Версія пароля: fingerprint активного хешу. Змінюється при зміні пароля. */
+  pv?: string;
 };
 
 /** 1. Допоміжні: bytes ↔ base64url / utf8. */

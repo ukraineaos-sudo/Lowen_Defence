@@ -3,6 +3,10 @@ import { hashPassword, generateAuthSecret } from "../lib/auth/password";
 /**
  * Löwen Defence® Credentials & Security Helper
  * Generates secure ADMIN_PASSWORD_HASH and AUTH_SECRET.
+ *
+ * Usage:
+ *   npm run generate:credentials -- "YourStrongPassword"
+ *   npm run generate:credentials -- --secret-only
  */
 
 export { hashPassword, generateAuthSecret };
@@ -23,15 +27,15 @@ function main() {
     return;
   }
 
-  let passwordArg = args.find((a) => !a.startsWith("--"));
-  if (!passwordArg) {
-    passwordArg = "admin";
-    console.log("ℹ️  Пароль не вказано в аргументах. Згенеровано хеш для стандартного пароля 'admin'.");
-    console.log("   Щоб створити хеш для власного пароля, виконайте:");
-    console.log("   npm run hash-password -- ВашНовийПароль123\n");
-  } else {
-    console.log(`ℹ️  Генерація хешу для вказаного пароля: '${passwordArg}'\n`);
+  const passwordArg = args.find((a) => !a.startsWith("--"));
+  if (!passwordArg || passwordArg.length < 8) {
+    console.error("\n❌ Вкажіть пароль (мін. 8 символів). Дефолт 'admin' більше не використовується.\n");
+    console.error("   npm run generate:credentials -- \"ВашНадійнийПароль123\"\n");
+    console.error("   лише AUTH_SECRET: npm run generate:credentials -- --secret-only\n");
+    process.exit(1);
   }
+
+  console.log(`ℹ️  Генерація хешу для вказаного пароля (${passwordArg.length} символів)\n`);
 
   const passwordHash = hashPassword(passwordArg);
 
@@ -45,6 +49,7 @@ function main() {
   console.log(`DATA_BLOB_READ_WRITE_TOKEN=`);
   console.log("\n------------------------------------------------------");
   console.log("⚠️  НІКОЛИ не зберігайте відкриті паролі або секрети в Git!");
+  console.log("⚠️  Не залишайте пароль 'admin' на продакшені.");
   console.log("======================================================\n");
 }
 

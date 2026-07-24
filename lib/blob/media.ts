@@ -1,6 +1,7 @@
 /**
  * lib/blob/media.ts — завантаження фото (public Media Blob)
- * JPEG/PNG/WebP ≤10MB; fallback у public/uploads/.
+ * JPEG/PNG/WebP; ліміт під body Vercel Functions (~4.5 МБ) з урахуванням base64 у JSON.
+ * Fallback у public/uploads/.
  */
 import { put } from "@vercel/blob";
 import fs from "fs";
@@ -9,7 +10,9 @@ import crypto from "crypto";
 import { mediaBlobToken } from "@/lib/env";
 
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp"]);
-const MAX_BYTES = 10 * 1024 * 1024;
+/** Декодований розмір. base64+JSON ≈ ×4/3 → тримаємось нижче ліміту body 4.5 МБ. */
+export const MAX_UPLOAD_BYTES = 3 * 1024 * 1024;
+export const MAX_UPLOAD_LABEL = "3 МБ";
 
 function mediaToken(): string | undefined {
   return mediaBlobToken();
@@ -42,8 +45,11 @@ export async function uploadImageFromDataUrl(
   }
 
   const buffer = Buffer.from(matches[2], "base64");
-  if (buffer.length > MAX_BYTES) {
-    return { success: false, error: "Файл занадто великий (макс. 10 МБ)" };
+  if (buffer.length > MAX_UPLOAD_BYTES) {
+    return {
+      success: false,
+      error: `Файл занадто великий (макс. ${MAX_UPLOAD_LABEL} через обмеження запиту)`,
+    };
   }
 
   const safeFolder = (folder || "general").replace(/[^a-zA-Z0-9_-]/g, "");

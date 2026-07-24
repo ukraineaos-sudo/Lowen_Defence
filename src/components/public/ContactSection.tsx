@@ -27,7 +27,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
     consent: false,
     honeypot: "",
   });
-  const [formStartedAt] = useState(() => Date.now());
+  const [formStartedAt, setFormStartedAt] = useState(() => Date.now());
 
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -75,6 +75,9 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
         });
       } else {
         setErrorMsg(data.error || "Не вдалося надіслати заявку. Спробуйте ще раз.");
+        if (data.code === "FORM_EXPIRED") {
+          setFormStartedAt(Date.now());
+        }
       }
     } catch (err) {
       setErrorMsg("Не вдалося надіслати заявку. Спробуйте ще раз або зв'яжіться телефоном.");

@@ -10,14 +10,12 @@ interface ImageFocalPointPickerProps {
   image: ResponsiveImageData;
   folderName: string;
   onChange: (updatedImage: ResponsiveImageData) => void;
-  authToken?: string;
 }
 
 export const ImageFocalPointPicker: React.FC<ImageFocalPointPickerProps> = ({
   image,
   folderName,
   onChange,
-  authToken,
 }) => {
   const [uploading, setUploading] = useState(false);
   const [previewMode, setPreviewMode] = useState<"desktop" | "tablet" | "mobile">("desktop");
@@ -53,8 +51,9 @@ export const ImageFocalPointPicker: React.FC<ImageFocalPointPickerProps> = ({
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      alert("Файл занадто великий. Максимальний розмір — 10 МБ.");
+    // Ліміт узгоджений з server MAX_UPLOAD_BYTES (body Vercel ~4.5 МБ + base64)
+    if (file.size > 3 * 1024 * 1024) {
+      alert("Файл занадто великий. Максимальний розмір — 3 МБ.");
       return;
     }
 
