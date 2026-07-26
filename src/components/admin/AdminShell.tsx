@@ -47,6 +47,7 @@ export type AdminSection =
 
 interface AdminShellProps {
   initialContent: SiteContent;
+  initialRevision: string | null;
   username: string;
   section: AdminSection;
 }
@@ -55,6 +56,7 @@ const fetchOpts: RequestInit = { credentials: "include" };
 
 export const AdminShell: React.FC<AdminShellProps> = ({
   initialContent,
+  initialRevision,
   username,
   section,
 }) => {
@@ -65,9 +67,11 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   const [savedContent, setSavedContent] = useState<SiteContent>(() =>
     structuredClone(initialContent)
   );
+  const [revision, setRevision] = useState<string | null>(initialRevision);
   const [applications, setApplications] = useState<CourseApplication[]>([]);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [conflictOpen, setConflictOpen] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [storageConfigured, setStorageConfigured] = useState<boolean | null>(null);
   const [storageHint, setStorageHint] = useState<string | null>(null);
@@ -148,7 +152,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     router.push(map[next]);
   };
 
-  // --- 5. Зберегти / скасувати контент ---
+  // --- 5. Зберегти / скасувати контент (OCC) ---
   const handleSaveContent = async () => {
     setSaving(true);
     setSaveSuccess(false);
@@ -158,7 +162,10 @@ export const AdminShell: React.FC<AdminShellProps> = ({
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(content),
+        body: JSON.stringify({
+          expectedRevision: revision,
+          content,
+        }),
       });
 
       const data = await res.json();
@@ -166,6 +173,9 @@ export const AdminShell: React.FC<AdminShellProps> = ({
         const next = structuredClone(data.content);
         setSavedContent(next);
         setContent(structuredClone(next));
+        setRevision(
+          typeof data.revision === "string" ? data.revision : revision
+        );
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
         if (data.code === "CONTENT_STATE_WRITE_FAILED") {
@@ -174,6 +184,8 @@ export const AdminShell: React.FC<AdminShellProps> = ({
               "Контент збережено, але state marker не оновлено. Збережіть ще раз."
           );
         }
+      } else if (res.status === 409 || data.code === "CONTENT_CONFLICT") {
+        setConflictOpen(true);
       } else {
         alert(data.error || "Не вдалося зберегти зміни.");
       }
@@ -181,6 +193,31 @@ export const AdminShell: React.FC<AdminShellProps> = ({
       alert("Помилка збереження на сервері.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const loadRemoteVersion = async () => {
+    if (
+      !confirm(
+        "Ваша поточна чернетка буде втрачена.\nЗавантажити актуальну версію?"
+      )
+    ) {
+      return;
+    }
+    try {
+      const res = await fetch("/api/admin/content", fetchOpts);
+      const data = await res.json();
+      if (!res.ok || !data.content) {
+        alert(data.error || "Не вдалося завантажити актуальну версію.");
+        return;
+      }
+      const next = structuredClone(data.content);
+      setContent(next);
+      setSavedContent(structuredClone(next));
+      setRevision(typeof data.revision === "string" ? data.revision : null);
+      setConflictOpen(false);
+    } catch {
+      alert("Помилка завантаження актуальної версії.");
     }
   };
 
@@ -499,15 +536,52 @@ export const AdminShell: React.FC<AdminShellProps> = ({
 
         {section === "history" && (
           <HistoryManager
-            onRestore={(restored) => {
+            expectedRevision={revision}
+            onRestore={(restored, nextRevision) => {
               setContent(restored);
               setSavedContent(restored);
+              setRevision(nextRevision);
             }}
           />
         )}
 
         {section === "security" && <PasswordChangeForm />}
       </main>
+
+      {conflictOpen && (
+        <div className="fixed inset-0 z-[80] bg-black/40 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl border border-amber-300 shadow-xl p-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <h2 className="text-lg font-black text-[#082d20]">
+                  Контент уже змінено
+                </h2>
+                <p className="text-sm text-[#64726a] mt-1">
+                  Інша вкладка або пристрій зберегли новішу версію. Ваші зміни не
+                  були записані. Чернетка в цій вкладці збережена.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setConflictOpen(false)}
+                className="rounded-full border border-gray-300 px-4 py-2 text-sm font-bold text-[#082d20]"
+              >
+                Продовжити редагування
+              </button>
+              <button
+                type="button"
+                onClick={loadRemoteVersion}
+                className="rounded-full bg-[#082d20] text-white px-4 py-2 text-sm font-bold"
+              >
+                Завантажити актуальну версію
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -66,13 +66,23 @@ export const ContentMissingPanel: React.FC<ContentMissingPanelProps> = ({
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timestamp }),
+        body: JSON.stringify({
+          timestamp,
+          expectedRevision: null,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.content) {
         alert("Контент відновлено. Перезавантажуємо адмінку…");
         router.refresh();
         window.location.href = "/admin";
+        return;
+      }
+      if (res.status === 409 || data.code === "CONTENT_CONFLICT") {
+        alert(
+          data.error ||
+            "Контент уже з’явився або змінений. Оновіть сторінку."
+        );
         return;
       }
       alert(data.error || "Не вдалося відновити версію.");

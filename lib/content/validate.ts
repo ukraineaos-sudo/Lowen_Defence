@@ -252,6 +252,30 @@ export const siteContentStoredSchema = siteContentBodySchema.safeExtend({
 /** @deprecated alias — stored schema для сумісності імпортів. */
 export const siteContentSchema = siteContentStoredSchema;
 
+/** POST /api/admin/content — OCC envelope. */
+export const saveContentRequestSchema = z.object({
+  expectedRevision: z.string().min(1).nullable(),
+  content: z.unknown(),
+});
+
+export function parseSaveContentRequest(input: unknown):
+  | {
+      ok: true;
+      expectedRevision: string | null;
+      content: unknown;
+    }
+  | { ok: false; error: string } {
+  const parsed = saveContentRequestSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Некоректний формат запиту збереження" };
+  }
+  return {
+    ok: true,
+    expectedRevision: parsed.data.expectedRevision,
+    content: parsed.data.content,
+  };
+}
+
 function issuesToFields(error: z.ZodError): ValidationFieldIssue[] {
   return error.issues.slice(0, MAX_FIELDS).map((issue) => ({
     path: issue.path.join("."),

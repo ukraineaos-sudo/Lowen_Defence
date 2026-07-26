@@ -46,6 +46,7 @@ export default async function AdminSectionPage({
   return (
     <AdminShell
       initialContent={result.content}
+      initialRevision={result.revision}
       username={session.u}
       section={section}
     />

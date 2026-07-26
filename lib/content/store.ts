@@ -1,9 +1,15 @@
 /**
  * lib/content/store.ts — контент сайту (JSON)
  * Public: Blob → local → default (graceful).
- * Admin: fail-closed + content state marker (не плутати first run і втрату current).
+ * Admin: fail-closed + content state marker + OCC (ETag / ifMatch).
  */
-import { list, put, del } from "@vercel/blob";
+import {
+  list,
+  put,
+  del,
+  get,
+  BlobPreconditionFailedError,
+} from "@vercel/blob";
 import fs from "fs";
 import path from "path";
 import { defaultSiteContent } from "@/src/data/default-site-content";
@@ -32,6 +38,18 @@ const LOCAL_DATA = path.join(process.cwd(), "data");
 const LOCAL_CONTENT = path.join(LOCAL_DATA, "site-content.json");
 const LOCAL_HISTORY = path.join(LOCAL_DATA, "history");
 
+const CONFLICT_MSG = "Контент уже був змінений в іншій вкладці.";
+
+function isPreconditionFailed(err: unknown): boolean {
+  if (err instanceof BlobPreconditionFailedError) return true;
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "name" in err &&
+    (err as { name: string }).name === "BlobPreconditionFailedError"
+  );
+}
+
 function dataToken(): string | undefined {
   return dataBlobToken();
 }
@@ -40,53 +58,99 @@ export function isDataStoreConfigured(): boolean {
   return Boolean(dataToken());
 }
 
+export type ContentRevision = string;
+
 export type ContentReadResult =
-  | { status: "found"; content: SiteContent; source: "blob" | "local" | "default" }
+  | {
+      status: "found";
+      content: SiteContent;
+      revision: ContentRevision;
+      source: "blob" | "local";
+    }
   | { status: "unavailable"; error?: unknown }
   | { status: "not_found" };
 
 export type AdminContentReadResult =
-  | { ok: true; content: SiteContent; source: "blob" | "local" | "default" }
+  | {
+      ok: true;
+      content: SiteContent;
+      revision: string | null;
+      source: "blob" | "local" | "default";
+    }
   | {
       ok: false;
       code: "STORAGE_UNAVAILABLE" | "CONTENT_MISSING";
       error: string;
     };
 
-/** 1. Читання current з Blob (found / not_found / unavailable). */
-async function readFromBlob(): Promise<ContentReadResult> {
+export type WriteSiteContentResult =
+  | {
+      success: true;
+      content: SiteContent;
+      revision: string;
+      code?: string;
+      error?: string;
+    }
+  | {
+      success: false;
+      code:
+        | "CONTENT_VALIDATION_FAILED"
+        | "CONTENT_CONFLICT"
+        | "STORAGE_UNAVAILABLE"
+        | "STORAGE_MISSING";
+      error: string;
+      fields?: { path: string; message: string }[];
+    };
+
+async function streamToJson(stream: ReadableStream<Uint8Array>): Promise<unknown> {
+  return new Response(stream).json();
+}
+
+/** 1. Читання current з Blob (found / not_found / unavailable) + ETag. */
+export async function readFromBlob(): Promise<ContentReadResult> {
   const token = dataToken();
   if (!token) return { status: "not_found" };
   try {
-    const { blobs } = await list({ prefix: CONTENT_PATH, token, limit: 20 });
-    const match = blobs.find((b) => b.pathname === CONTENT_PATH);
-    if (!match) return { status: "not_found" };
-    const res = await fetch(match.url, {
-      headers: { Authorization: `Bearer ${token}` },
+    const result = await get(CONTENT_PATH, {
+      access: "private",
+      token,
     });
-    if (!res.ok) {
-      return { status: "unavailable", error: `HTTP ${res.status}` };
+    if (!result || result.statusCode !== 200 || !result.stream) {
+      return { status: "not_found" };
     }
-    const json = await res.json();
+    const json = await streamToJson(result.stream);
     const validated = validateSiteContent(json);
     if (!validated.ok) {
       return { status: "unavailable", error: validated.error };
     }
-    return { status: "found", content: validated.content, source: "blob" };
+    return {
+      status: "found",
+      content: validated.content,
+      revision: result.blob.etag,
+      source: "blob",
+    };
   } catch (err) {
     console.warn("Blob content read failed:", err);
     return { status: "unavailable", error: err };
   }
 }
 
-function readFromLocal(): SiteContent | null {
+function readFromLocal(): ContentReadResult {
   try {
-    if (!fs.existsSync(LOCAL_CONTENT)) return null;
+    if (!fs.existsSync(LOCAL_CONTENT)) return { status: "not_found" };
     const raw = fs.readFileSync(LOCAL_CONTENT, "utf-8");
     const validated = validateSiteContent(JSON.parse(raw));
-    return validated.ok ? validated.content : null;
-  } catch {
-    return null;
+    if (!validated.ok) {
+      return { status: "unavailable", error: validated.error };
+    }
+    return {
+      status: "found",
+      content: validated.content,
+      revision: validated.content.updatedAt,
+      source: "local",
+    };
+  } catch (err) {
+    return { status: "unavailable", error: err };
   }
 }
 
@@ -187,7 +251,7 @@ export async function readSiteContent(): Promise<SiteContent> {
     }
   }
   const fromLocal = readFromLocal();
-  if (fromLocal) return fromLocal;
+  if (fromLocal.status === "found") return fromLocal.content;
   return defaultSiteContent;
 }
 
@@ -203,7 +267,12 @@ export async function readSiteContentForAdmin(): Promise<AdminContentReadResult>
       if (ensure.warning) {
         console.warn("ensureContentStateMarker:", ensure.warning);
       }
-      return { ok: true, content: fromBlob.content, source: "blob" };
+      return {
+        ok: true,
+        content: fromBlob.content,
+        revision: fromBlob.revision,
+        source: "blob",
+      };
     }
     if (fromBlob.status === "unavailable") {
       return {
@@ -213,7 +282,6 @@ export async function readSiteContentForAdmin(): Promise<AdminContentReadResult>
       };
     }
 
-    // current not_found → marker і history СПІЛЬНО
     const [marker, history] = await Promise.all([
       readContentStateFromBlob(),
       inspectContentHistory(),
@@ -222,12 +290,29 @@ export async function readSiteContentForAdmin(): Promise<AdminContentReadResult>
     if (!decision.ok) {
       return { ok: false, code: decision.code, error: decision.error };
     }
-    return { ok: true, content: defaultSiteContent, source: "default" };
+    return {
+      ok: true,
+      content: defaultSiteContent,
+      revision: null,
+      source: "default",
+    };
   }
 
   const fromLocal = readFromLocal();
-  if (fromLocal) return { ok: true, content: fromLocal, source: "local" };
-  return { ok: true, content: defaultSiteContent, source: "default" };
+  if (fromLocal.status === "found") {
+    return {
+      ok: true,
+      content: fromLocal.content,
+      revision: fromLocal.revision,
+      source: "local",
+    };
+  }
+  return {
+    ok: true,
+    content: defaultSiteContent,
+    revision: null,
+    source: "default",
+  };
 }
 
 /** 2. Snapshot у history перед оновленням current (≤20 версій). */
@@ -283,22 +368,44 @@ function writeHistoryLocal(content: SiteContent) {
   }
 }
 
-/** 3. Зберегти контент. При Blob-токені — current, потім marker. */
+async function finalizeMarkerAfterWrite(
+  next: SiteContent,
+  revision: string
+): Promise<WriteSiteContentResult> {
+  const existingState = await readContentStateFromBlob();
+  const initializedAt =
+    existingState.status === "found"
+      ? existingState.state.initializedAt
+      : undefined;
+  const state = buildContentState({
+    initializedAt,
+    lastContentUpdatedAt: next.updatedAt,
+  });
+  const stateWrite = await writeContentStateToBlob(state);
+  if (!stateWrite.ok) {
+    return {
+      success: true,
+      content: next,
+      revision,
+      code: "CONTENT_STATE_WRITE_FAILED",
+      error:
+        "Контент збережено, але не вдалося оновити state marker. Спробуйте зберегти ще раз.",
+    };
+  }
+  return { success: true, content: next, revision };
+}
+
+/** 3. Зберегти контент з OCC (Blob ifMatch / local updatedAt). */
 export async function writeSiteContent(
-  content: unknown
-): Promise<{
-  success: boolean;
-  error?: string;
-  code?: string;
-  fields?: { path: string; message: string }[];
-  content?: SiteContent;
-}> {
+  content: unknown,
+  expectedRevision: string | null
+): Promise<WriteSiteContentResult> {
   const validated = validateSiteContentInput(content);
   if (!validated.ok) {
     return {
       success: false,
       error: validated.error,
-      code: validated.code,
+      code: "CONTENT_VALIDATION_FAILED",
       fields: validated.fields,
     };
   }
@@ -319,38 +426,88 @@ export async function writeSiteContent(
           error: "Сховище тимчасово недоступне. Збереження скасовано.",
         };
       }
-      if (previous.status === "found") await writeHistoryBlob(previous.content, token);
 
-      await put(CONTENT_PATH, JSON.stringify(next, null, 2), {
-        access: "private",
-        token,
-        addRandomSuffix: false,
-        contentType: "application/json",
-        allowOverwrite: true,
-      });
+      if (previous.status === "found") {
+        if (
+          expectedRevision === null ||
+          expectedRevision !== previous.revision
+        ) {
+          return {
+            success: false,
+            code: "CONTENT_CONFLICT",
+            error: CONFLICT_MSG,
+          };
+        }
 
-      const existingState = await readContentStateFromBlob();
-      const initializedAt =
-        existingState.status === "found"
-          ? existingState.state.initializedAt
-          : undefined;
-      const state = buildContentState({
-        initializedAt,
-        lastContentUpdatedAt: next.updatedAt,
-      });
-      const stateWrite = await writeContentStateToBlob(state);
-      if (!stateWrite.ok) {
-        // current уже записаний — не відкочуємо; окремий код
+        await writeHistoryBlob(previous.content, token);
+
+        try {
+          const written = await put(
+            CONTENT_PATH,
+            JSON.stringify(next, null, 2),
+            {
+              access: "private",
+              token,
+              addRandomSuffix: false,
+              contentType: "application/json",
+              allowOverwrite: true,
+              ifMatch: expectedRevision,
+            }
+          );
+          return finalizeMarkerAfterWrite(next, written.etag);
+        } catch (err) {
+          if (isPreconditionFailed(err)) {
+            return {
+              success: false,
+              code: "CONTENT_CONFLICT",
+              error: CONFLICT_MSG,
+            };
+          }
+          throw err;
+        }
+      }
+
+      // current not_found — перший Save лише з expectedRevision = null
+      if (expectedRevision !== null) {
         return {
-          success: true,
-          content: next,
-          code: "CONTENT_STATE_WRITE_FAILED",
-          error:
-            "Контент збережено, але не вдалося оновити state marker. Спробуйте зберегти ще раз.",
+          success: false,
+          code: "CONTENT_CONFLICT",
+          error: CONFLICT_MSG,
         };
       }
 
-      return { success: true, content: next };
+      try {
+        const written = await put(
+          CONTENT_PATH,
+          JSON.stringify(next, null, 2),
+          {
+            access: "private",
+            token,
+            addRandomSuffix: false,
+            contentType: "application/json",
+            // без allowOverwrite: друга вкладка не перезапише створений об'єкт
+          }
+        );
+        return finalizeMarkerAfterWrite(next, written.etag);
+      } catch (err) {
+        if (isPreconditionFailed(err)) {
+          return {
+            success: false,
+            code: "CONTENT_CONFLICT",
+            error: CONFLICT_MSG,
+          };
+        }
+        // об'єкт уже з'явився між read і put
+        const again = await readFromBlob();
+        if (again.status === "found") {
+          return {
+            success: false,
+            code: "CONTENT_CONFLICT",
+            error: CONFLICT_MSG,
+          };
+        }
+        throw err;
+      }
     } catch (err) {
       console.error("Blob content write failed:", err);
       return {
@@ -361,21 +518,49 @@ export async function writeSiteContent(
     }
   }
 
-  // Dev / без Blob: local only
+  // Dev / без Blob: local revision = updatedAt
   try {
     if (!fs.existsSync(LOCAL_DATA)) fs.mkdirSync(LOCAL_DATA, { recursive: true });
-    if (fs.existsSync(LOCAL_CONTENT)) {
-      try {
-        const prev = JSON.parse(fs.readFileSync(LOCAL_CONTENT, "utf-8"));
-        writeHistoryLocal(prev);
-      } catch {
-        /* ignore */
-      }
+    const previous = readFromLocal();
+    if (previous.status === "unavailable") {
+      return {
+        success: false,
+        code: "STORAGE_UNAVAILABLE",
+        error: "Локальний файл контенту пошкоджений.",
+      };
     }
+    if (previous.status === "found") {
+      if (
+        expectedRevision === null ||
+        expectedRevision !== previous.revision
+      ) {
+        return {
+          success: false,
+          code: "CONTENT_CONFLICT",
+          error: CONFLICT_MSG,
+        };
+      }
+      writeHistoryLocal(previous.content);
+    } else if (expectedRevision !== null) {
+      return {
+        success: false,
+        code: "CONTENT_CONFLICT",
+        error: CONFLICT_MSG,
+      };
+    }
+
     fs.writeFileSync(LOCAL_CONTENT, JSON.stringify(next, null, 2), "utf-8");
-    return { success: true, content: next };
+    return {
+      success: true,
+      content: next,
+      revision: next.updatedAt,
+    };
   } catch {
-    return { success: false, error: "Сховище ще не налаштовано", code: "STORAGE_MISSING" };
+    return {
+      success: false,
+      error: "Сховище ще не налаштовано",
+      code: "STORAGE_MISSING",
+    };
   }
 }
 
@@ -452,16 +637,19 @@ export async function listContentHistory(): Promise<ContentHistoryBackup[]> {
 
 /** 5. Відкат: backup → нова current (+ marker через writeSiteContent). */
 export async function rollbackContent(
-  timestamp: string
-): Promise<{ success: boolean; error?: string; code?: string; content?: SiteContent }> {
+  timestamp: string,
+  expectedRevision: string | null
+): Promise<WriteSiteContentResult | { success: false; error: string; code: string }> {
   try {
     const history = await listContentHistory();
     const match =
       timestamp === "latest"
         ? history[0]
         : history.find((h) => h.timestamp === timestamp);
-    if (!match) return { success: false, error: "Версію не знайдено", code: "NOT_FOUND" };
-    return writeSiteContent(match.content);
+    if (!match) {
+      return { success: false, error: "Версію не знайдено", code: "NOT_FOUND" };
+    }
+    return writeSiteContent(match.content, expectedRevision);
   } catch {
     return {
       success: false,

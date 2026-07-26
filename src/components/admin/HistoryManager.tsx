@@ -6,10 +6,14 @@ import { ContentHistoryBackup, SiteContent } from "../../types/content";
 import { History, RotateCcw, Clock, ShieldAlert } from "lucide-react";
 
 interface HistoryManagerProps {
-  onRestore: (restoredContent: SiteContent) => void;
+  expectedRevision: string | null;
+  onRestore: (restoredContent: SiteContent, revision: string | null) => void;
 }
 
-export const HistoryManager: React.FC<HistoryManagerProps> = ({ onRestore }) => {
+export const HistoryManager: React.FC<HistoryManagerProps> = ({
+  expectedRevision,
+  onRestore,
+}) => {
   const [backups, setBackups] = useState<ContentHistoryBackup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,14 +59,25 @@ export const HistoryManager: React.FC<HistoryManagerProps> = ({ onRestore }) => 
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timestamp: backup.timestamp }),
+        body: JSON.stringify({
+          timestamp: backup.timestamp,
+          expectedRevision,
+        }),
       });
 
       const data = await res.json();
       if (res.ok && data.content) {
-        onRestore(data.content);
+        onRestore(
+          data.content,
+          typeof data.revision === "string" ? data.revision : null
+        );
         await fetchHistory();
         alert("Версію успішно відновлено!");
+      } else if (res.status === 409 || data.code === "CONTENT_CONFLICT") {
+        alert(
+          data.error ||
+            "Контент уже змінено в іншій вкладці. Оновіть сторінку та спробуйте знову."
+        );
       } else {
         alert(data.error || "Не вдалося відновити версію.");
       }

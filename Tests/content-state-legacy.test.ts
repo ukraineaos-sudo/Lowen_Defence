@@ -10,6 +10,13 @@ vi.mock("@vercel/blob", () => ({
   list: (...args: unknown[]) => listMock(...args),
   put: (...args: unknown[]) => putMock(...args),
   del: vi.fn(),
+  get: vi.fn(),
+  BlobPreconditionFailedError: class BlobPreconditionFailedError extends Error {
+    constructor() {
+      super("precondition failed");
+      this.name = "BlobPreconditionFailedError";
+    }
+  },
 }));
 
 vi.mock("@/lib/env", () => ({
