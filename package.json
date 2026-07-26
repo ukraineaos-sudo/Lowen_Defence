@@ -7,12 +7,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "generate:credentials": "tsx scripts/generate-credentials.ts",
     "hash-password": "tsx scripts/generate-credentials.ts",
-    "generate:secret": "tsx scripts/generate-credentials.ts --secret-only"
+    "generate:secret": "tsx scripts/generate-credentials.ts --secret-only",
+    "audit:content": "tsx scripts/audit-content-blob.ts",
+    "migrate:content:safe": "tsx scripts/audit-content-blob.ts --apply-safe"
   },
   "dependencies": {
     "@vercel/blob": "^2.6.1",

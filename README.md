@@ -33,7 +33,8 @@ npm run generate:credentials -- "ВашНадійнийПароль123"
 npm test
 ```
 
-Звіт: `Tests/results/vitest-report.json`, короткий лог — `Tests/results/last-run.txt`.  
+Локальний JSON-звіт (gitignore): `Tests/results/vitest-report.json`.  
+Джерело істини для `main` — GitHub Actions CI (typecheck → tests → build).  
 Деталі: `Tests/README.md`.
 
 ## Vercel Blob (продакшен)
@@ -77,8 +78,9 @@ npm test
 ## Скрипти
 
 - `npm run dev` / `build` / `start`
-- `npm run lint` — `tsc --noEmit`
+- `npm run typecheck` — `tsc --noEmit`
 - `npm test` / `npm run test:watch` — Vitest
+- `npm run audit:content` / `migrate:content:safe` — ручний Blob-аудит (не CI)
 - `npm run generate:credentials`
 
 ## Приймальні критерії (коротко)

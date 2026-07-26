@@ -1,6 +1,6 @@
 # Tests
 
-Юніт-тести (Vitest) для критичної логіки: паролі, сесія/`pv`, rate-limit, антибот форми, валідація контенту.
+Юніт-тести (Vitest) для критичної логіки: паролі, сесія/`pv`, rate-limit, антибот форми, валідація/міграція контенту.
 
 ## Запуск
 
@@ -8,8 +8,9 @@
 npm test
 ```
 
-JSON-звіт: `Tests/results/vitest-report.json`  
-Текстовий лог останнього прогону: `Tests/results/last-run.txt`
+Локальний JSON-звіт (gitignore, не quality gate): `Tests/results/vitest-report.json`.
+
+На `main` джерело істини — GitHub Actions workflow **CI** (`typecheck` → `test` → `build`) на конкретному SHA.
 
 ## Файли
 
@@ -20,3 +21,8 @@ JSON-звіт: `Tests/results/vitest-report.json`
 | `rate-limit.test.ts` | sliding window |
 | `form-guards.test.ts` | honeypot / consent / `_t` |
 | `validate-content.test.ts` | Zod + safe URLs |
+| `content-state.test.ts` | marker × history матриця |
+| `content-migration.test.ts` | audit / safe migrate |
+| `password-state.test.ts` | password hash × marker |
+| `application-status.test.ts` | status Zod |
+| `storage-status.test.ts` | Data + Media tokens |

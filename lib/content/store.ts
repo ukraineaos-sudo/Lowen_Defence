@@ -19,9 +19,13 @@ import {
   type ContentStateReadResult,
   type HistoryInspectResult,
 } from "./content-state";
+import {
+  CONTENT_CURRENT_PATH,
+  CONTENT_HISTORY_PREFIX,
+} from "./paths";
 
-const CONTENT_PATH = "content/current/site-content.json";
-const HISTORY_PREFIX = "content/history/";
+const CONTENT_PATH = CONTENT_CURRENT_PATH;
+const HISTORY_PREFIX = CONTENT_HISTORY_PREFIX;
 const MAX_HISTORY = 20;
 
 const LOCAL_DATA = path.join(process.cwd(), "data");
@@ -54,9 +58,10 @@ async function readFromBlob(): Promise<ContentReadResult> {
   const token = dataToken();
   if (!token) return { status: "not_found" };
   try {
-    const { blobs } = await list({ prefix: CONTENT_PATH, token, limit: 1 });
-    if (!blobs.length) return { status: "not_found" };
-    const res = await fetch(blobs[0]!.url, {
+    const { blobs } = await list({ prefix: CONTENT_PATH, token, limit: 20 });
+    const match = blobs.find((b) => b.pathname === CONTENT_PATH);
+    if (!match) return { status: "not_found" };
+    const res = await fetch(match.url, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) {

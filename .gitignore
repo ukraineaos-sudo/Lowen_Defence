@@ -21,3 +21,5 @@ src/vite-env.d.ts
 src/assets/
 /assets/
 _incoming-favicons/
+Tests/results/*.json
+Tests/results/*.txt
