@@ -8,7 +8,7 @@ import {
   SESSION_COOKIE,
   type SessionPayload,
 } from "./session-edge";
-import { getActivePasswordHash } from "./password-store";
+import { getActivePasswordResult } from "./password-store";
 import { runtimeEnv, dataBlobToken, mediaBlobToken } from "@/lib/env";
 
 export { SESSION_COOKIE };
@@ -72,9 +72,9 @@ export async function getSessionFromCookies(): Promise<SessionPayload | null> {
   // Старі токени без pv (до впровадження) лишаються дійсними до exp.
   if (payload.pv) {
     const secret = getAuthSecret();
-    const hash = secret ? await getActivePasswordHash() : null;
-    if (!secret || !hash) return null;
-    if (!timingSafeEqualString(payload.pv, passwordVersion(hash, secret))) {
+    const active = secret ? await getActivePasswordResult() : null;
+    if (!secret || !active?.ok) return null;
+    if (!timingSafeEqualString(payload.pv, passwordVersion(active.hash, secret))) {
       return null;
     }
   }

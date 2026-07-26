@@ -1,15 +1,24 @@
 /**
  * lib/content/store.ts — контент сайту (JSON)
  * Public: Blob → local → default (graceful).
- * Admin/write при налаштованому Blob: тільки Blob; unavailable ≠ fallback.
+ * Admin: fail-closed + content state marker (не плутати first run і втрату current).
  */
 import { list, put, del } from "@vercel/blob";
 import fs from "fs";
 import path from "path";
 import { defaultSiteContent } from "@/src/data/default-site-content";
 import type { ContentHistoryBackup, SiteContent } from "@/src/types/content";
-import { validateSiteContent } from "./validate";
+import { validateSiteContent, validateSiteContentInput } from "./validate";
 import { dataBlobToken } from "@/lib/env";
+import {
+  CONTENT_STATE_PATH,
+  buildContentState,
+  parseContentState,
+  resolveAdminBootstrapWhenCurrentMissing,
+  type ContentState,
+  type ContentStateReadResult,
+  type HistoryInspectResult,
+} from "./content-state";
 
 const CONTENT_PATH = "content/current/site-content.json";
 const HISTORY_PREFIX = "content/history/";
@@ -32,6 +41,14 @@ export type ContentReadResult =
   | { status: "unavailable"; error?: unknown }
   | { status: "not_found" };
 
+export type AdminContentReadResult =
+  | { ok: true; content: SiteContent; source: "blob" | "local" | "default" }
+  | {
+      ok: false;
+      code: "STORAGE_UNAVAILABLE" | "CONTENT_MISSING";
+      error: string;
+    };
+
 /** 1. Читання current з Blob (found / not_found / unavailable). */
 async function readFromBlob(): Promise<ContentReadResult> {
   const token = dataToken();
@@ -48,7 +65,6 @@ async function readFromBlob(): Promise<ContentReadResult> {
     const json = await res.json();
     const validated = validateSiteContent(json);
     if (!validated.ok) {
-      // Пошкоджений JSON у Blob — не підміняти default для admin без явного fallback
       return { status: "unavailable", error: validated.error };
     }
     return { status: "found", content: validated.content, source: "blob" };
@@ -69,13 +85,98 @@ function readFromLocal(): SiteContent | null {
   }
 }
 
+/** Marker: found / not_found / unavailable (пошкоджений JSON ≠ not_found). */
+export async function readContentStateFromBlob(): Promise<ContentStateReadResult> {
+  const token = dataToken();
+  if (!token) return { status: "not_found" };
+  try {
+    const { blobs } = await list({ prefix: CONTENT_STATE_PATH, token, limit: 1 });
+    const match = blobs.find((b) => b.pathname === CONTENT_STATE_PATH) || blobs[0];
+    if (!match) return { status: "not_found" };
+    const res = await fetch(match.url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      return { status: "unavailable", error: `HTTP ${res.status}` };
+    }
+    let json: unknown;
+    try {
+      json = await res.json();
+    } catch (err) {
+      return { status: "unavailable", error: err };
+    }
+    return parseContentState(json);
+  } catch (err) {
+    console.warn("Content state blob read failed:", err);
+    return { status: "unavailable", error: err };
+  }
+}
+
+async function writeContentStateToBlob(
+  state: ContentState
+): Promise<{ ok: true } | { ok: false; error: unknown }> {
+  const token = dataToken();
+  if (!token) return { ok: false, error: "No data blob token" };
+  try {
+    await put(CONTENT_STATE_PATH, JSON.stringify(state, null, 2), {
+      access: "private",
+      token,
+      addRandomSuffix: false,
+      contentType: "application/json",
+      allowOverwrite: true,
+    });
+    return { ok: true };
+  } catch (err) {
+    console.error("Content state blob write failed:", err);
+    return { ok: false, error: err };
+  }
+}
+
+/**
+ * Legacy migration: якщо current є, а marker немає — створити.
+ * Помилка запису не блокує admin-read (контент уже достовірний).
+ */
+export async function ensureContentStateMarker(
+  lastContentUpdatedAt: string
+): Promise<{ ensured: boolean; warning?: string }> {
+  const existing = await readContentStateFromBlob();
+  if (existing.status === "found") return { ensured: true };
+  if (existing.status === "unavailable") {
+    const msg = "Не вдалося перевірити content/state.json";
+    console.error(msg, existing.error);
+    return { ensured: false, warning: msg };
+  }
+
+  const state = buildContentState({ lastContentUpdatedAt });
+  const written = await writeContentStateToBlob(state);
+  if (!written.ok) {
+    const msg = "Не вдалося створити content/state.json (legacy migration)";
+    console.error(msg, written.error);
+    return { ensured: false, warning: msg };
+  }
+  return { ensured: true };
+}
+
+/** Легкий probe history: list без скачування JSON. */
+export async function inspectContentHistory(): Promise<HistoryInspectResult> {
+  const token = dataToken();
+  if (!token) return { status: "empty" };
+  try {
+    const { blobs } = await list({ prefix: HISTORY_PREFIX, token, limit: 1 });
+    if (!blobs.length) return { status: "empty" };
+    return { status: "exists", count: blobs.length };
+  } catch (err) {
+    console.warn("Blob history inspect failed:", err);
+    return { status: "unavailable", error: err };
+  }
+}
+
 /** Публічний сайт: graceful fallback Blob → local → default. */
 export async function readSiteContent(): Promise<SiteContent> {
   const token = dataToken();
   if (token) {
     const fromBlob = await readFromBlob();
     if (fromBlob.status === "found") return fromBlob.content;
-    // unavailable / not_found — публічка може показати local/default
     if (fromBlob.status === "unavailable") {
       console.warn("Blob unavailable for public read — using local/default fallback");
     }
@@ -86,17 +187,17 @@ export async function readSiteContent(): Promise<SiteContent> {
 }
 
 /**
- * Адмінка: при налаштованому Data Blob не підсовувати default як «актуальний».
- * unavailable → помилка (заборона Save поверх фейкового контенту).
+ * Адмінка: fail-closed + marker×history матриця при current not_found.
  */
-export async function readSiteContentForAdmin(): Promise<
-  | { ok: true; content: SiteContent; source: "blob" | "local" | "default" }
-  | { ok: false; code: "STORAGE_UNAVAILABLE"; error: string }
-> {
+export async function readSiteContentForAdmin(): Promise<AdminContentReadResult> {
   const token = dataToken();
   if (token) {
     const fromBlob = await readFromBlob();
     if (fromBlob.status === "found") {
+      const ensure = await ensureContentStateMarker(fromBlob.content.updatedAt);
+      if (ensure.warning) {
+        console.warn("ensureContentStateMarker:", ensure.warning);
+      }
       return { ok: true, content: fromBlob.content, source: "blob" };
     }
     if (fromBlob.status === "unavailable") {
@@ -106,7 +207,16 @@ export async function readSiteContentForAdmin(): Promise<
         error: "Сховище контенту тимчасово недоступне. Збереження заборонено.",
       };
     }
-    // not_found у Blob — перший запуск: bootstrap default (але source позначений)
+
+    // current not_found → marker і history СПІЛЬНО
+    const [marker, history] = await Promise.all([
+      readContentStateFromBlob(),
+      inspectContentHistory(),
+    ]);
+    const decision = resolveAdminBootstrapWhenCurrentMissing(marker, history);
+    if (!decision.ok) {
+      return { ok: false, code: decision.code, error: decision.error };
+    }
     return { ok: true, content: defaultSiteContent, source: "default" };
   }
 
@@ -168,12 +278,25 @@ function writeHistoryLocal(content: SiteContent) {
   }
 }
 
-/** 3. Зберегти контент. При Blob-токені — успіх лише після Blob write. */
+/** 3. Зберегти контент. При Blob-токені — current, потім marker. */
 export async function writeSiteContent(
-  content: SiteContent
-): Promise<{ success: boolean; error?: string; code?: string; content?: SiteContent }> {
-  const validated = validateSiteContent(content);
-  if (!validated.ok) return { success: false, error: validated.error, code: "VALIDATION" };
+  content: unknown
+): Promise<{
+  success: boolean;
+  error?: string;
+  code?: string;
+  fields?: { path: string; message: string }[];
+  content?: SiteContent;
+}> {
+  const validated = validateSiteContentInput(content);
+  if (!validated.ok) {
+    return {
+      success: false,
+      error: validated.error,
+      code: validated.code,
+      fields: validated.fields,
+    };
+  }
 
   const next: SiteContent = {
     ...validated.content,
@@ -200,6 +323,28 @@ export async function writeSiteContent(
         contentType: "application/json",
         allowOverwrite: true,
       });
+
+      const existingState = await readContentStateFromBlob();
+      const initializedAt =
+        existingState.status === "found"
+          ? existingState.state.initializedAt
+          : undefined;
+      const state = buildContentState({
+        initializedAt,
+        lastContentUpdatedAt: next.updatedAt,
+      });
+      const stateWrite = await writeContentStateToBlob(state);
+      if (!stateWrite.ok) {
+        // current уже записаний — не відкочуємо; окремий код
+        return {
+          success: true,
+          content: next,
+          code: "CONTENT_STATE_WRITE_FAILED",
+          error:
+            "Контент збережено, але не вдалося оновити state marker. Спробуйте зберегти ще раз.",
+        };
+      }
+
       return { success: true, content: next };
     } catch (err) {
       console.error("Blob content write failed:", err);
@@ -300,13 +445,16 @@ export async function listContentHistory(): Promise<ContentHistoryBackup[]> {
   return backups;
 }
 
-/** 5. Відкат: взяти backup і записати як нову current. */
+/** 5. Відкат: backup → нова current (+ marker через writeSiteContent). */
 export async function rollbackContent(
   timestamp: string
 ): Promise<{ success: boolean; error?: string; code?: string; content?: SiteContent }> {
   try {
     const history = await listContentHistory();
-    const match = history.find((h) => h.timestamp === timestamp);
+    const match =
+      timestamp === "latest"
+        ? history[0]
+        : history.find((h) => h.timestamp === timestamp);
     if (!match) return { success: false, error: "Версію не знайдено", code: "NOT_FOUND" };
     return writeSiteContent(match.content);
   } catch {

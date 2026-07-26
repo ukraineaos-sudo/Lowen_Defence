@@ -168,6 +168,12 @@ export const AdminShell: React.FC<AdminShellProps> = ({
         setContent(structuredClone(next));
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
+        if (data.code === "CONTENT_STATE_WRITE_FAILED") {
+          alert(
+            data.error ||
+              "Контент збережено, але state marker не оновлено. Збережіть ще раз."
+          );
+        }
       } else {
         alert(data.error || "Не вдалося зберегти зміни.");
       }

@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { assertSameOrigin } from "@/lib/auth/csrf";
 import { verifyPassword } from "@/lib/auth/password";
-import { getActivePasswordHash } from "@/lib/auth/password-store";
+import { getActivePasswordResult } from "@/lib/auth/password-store";
 import {
   SESSION_COOKIE,
   createSessionToken,
@@ -22,6 +22,17 @@ import {
 
 const LOGIN_FAIL_LIMIT = 8;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 8 фейлів / 15 хв / IP
+
+function authUnavailableResponse(code: string, error: string) {
+  const userMessage =
+    code === "PASSWORD_HASH_MISSING"
+      ? "Файл пароля відсутній. Сховище вже ініціалізовано, тому стартовий пароль з env не активовано."
+      : "Вхід тимчасово недоступний. Не вдалося безпечно отримати дані авторизації. Спробуйте пізніше або перевірте Data Blob.";
+  return NextResponse.json(
+    { error: userMessage, code, detail: error },
+    { status: 503 }
+  );
+}
 
 // --- 1. Перевірка пароля + Set-Cookie сесії ---
 export async function POST(req: NextRequest) {
@@ -47,13 +58,19 @@ export async function POST(req: NextRequest) {
   }
 
   const secret = runtimeEnv("AUTH_SECRET");
-  const passwordHash = await getActivePasswordHash();
-
-  if (!secret || !passwordHash) {
+  if (!secret) {
     return NextResponse.json(
-      { error: "Автентифікацію не налаштовано (відсутній AUTH_SECRET / пароль)" },
+      {
+        error: "Автентифікацію не налаштовано (відсутній AUTH_SECRET)",
+        code: "PASSWORD_NOT_CONFIGURED",
+      },
       { status: 503 }
     );
+  }
+
+  const active = await getActivePasswordResult();
+  if (!active.ok) {
+    return authUnavailableResponse(active.code, active.error);
   }
 
   const body = await req.json().catch(() => ({}));
@@ -61,8 +78,8 @@ export async function POST(req: NextRequest) {
   const password = String(body.password || "");
   const adminUser = getAdminUsername();
 
-  if (username === adminUser && verifyPassword(password, passwordHash)) {
-    const token = createSessionToken(username, passwordHash);
+  if (username === adminUser && verifyPassword(password, active.hash)) {
+    const token = createSessionToken(username, active.hash);
     if (!token) {
       return NextResponse.json({ error: "Помилка створення сесії" }, { status: 500 });
     }

@@ -21,12 +21,13 @@ export async function GET() {
   }
   const result = await readSiteContentForAdmin();
   if (!result.ok) {
+    const status = result.code === "CONTENT_MISSING" ? 409 : 503;
     return NextResponse.json(
       {
         error: result.error,
         code: result.code,
       },
-      { status: 503 }
+      { status }
     );
   }
   return NextResponse.json(result.content);
@@ -43,16 +44,23 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json().catch(() => null);
-  const result = await writeSiteContent(body as Parameters<typeof writeSiteContent>[0]);
+  const result = await writeSiteContent(body);
   if (!result.success) {
     const status = result.code === "STORAGE_UNAVAILABLE" ? 503 : 400;
     return NextResponse.json(
       {
         error: result.error || "Сховище ще не налаштовано",
         code: result.code,
+        fields: result.fields,
       },
       { status }
     );
   }
-  return NextResponse.json({ success: true, content: result.content });
+  return NextResponse.json({
+    success: true,
+    content: result.content,
+    code: result.code,
+    warning:
+      result.code === "CONTENT_STATE_WRITE_FAILED" ? result.error : undefined,
+  });
 }

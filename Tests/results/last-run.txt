@@ -1,2 +1,2 @@
-Vitest — 23 passed (7 files)
-application-status + storage-status added
+Vitest — 47 passed (12 files)
+password-state marker + policy + login 503

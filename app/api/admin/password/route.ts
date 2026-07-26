@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { assertSameOrigin } from "@/lib/auth/csrf";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import {
-  getActivePasswordHash,
+  getActivePasswordResult,
   writePasswordHash,
 } from "@/lib/auth/password-store";
 import { getSessionFromCookies } from "@/lib/auth/session";
@@ -54,8 +54,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const activeHash = await getActivePasswordHash();
-  if (!activeHash || !verifyPassword(currentPassword, activeHash)) {
+  const active = await getActivePasswordResult();
+  if (!active.ok) {
+    return NextResponse.json(
+      { error: active.error, code: active.code },
+      { status: 503 }
+    );
+  }
+  if (!verifyPassword(currentPassword, active.hash)) {
     return NextResponse.json(
       { error: "Поточний пароль невірний" },
       { status: 400 }
@@ -65,14 +71,17 @@ export async function POST(req: NextRequest) {
   const nextHash = hashPassword(newPassword);
   const result = await writePasswordHash(nextHash);
   if (!result.success) {
+    const status = result.code === "PASSWORD_STORE_UNAVAILABLE" ? 503 : 400;
     return NextResponse.json(
-      { error: result.error || "Не вдалося зберегти пароль" },
-      { status: 400 }
+      { error: result.error || "Не вдалося зберегти пароль", code: result.code },
+      { status }
     );
   }
 
   return NextResponse.json({
     success: true,
     message: "Пароль змінено. Увійдіть з новим паролем при наступному логіні.",
+    warning: result.warning,
+    code: result.code,
   });
 }

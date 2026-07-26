@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getSessionFromCookies } from "@/lib/auth/session";
 import { readSiteContentForAdmin } from "@/lib/content/store";
 import { AdminShell, type AdminSection } from "@/src/components/admin/AdminShell";
+import { ContentMissingPanel } from "@/src/components/admin/ContentMissingPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,9 @@ export default async function AdminSectionPage({
 
   const result = await readSiteContentForAdmin();
   if (!result.ok) {
+    if (result.code === "CONTENT_MISSING") {
+      return <ContentMissingPanel error={result.error} />;
+    }
     return (
       <main className="min-h-screen bg-[#f8faf8] flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white border border-red-200 rounded-2xl p-6 shadow-sm">

@@ -32,6 +32,13 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onClose }) =>
       const data = await res.json();
       if (res.ok && data.success) {
         onSuccess("cookie", data.username);
+      } else if (res.status === 503) {
+        setErrorMsg(
+          data.code === "PASSWORD_HASH_MISSING"
+            ? "Файл пароля відсутній. Сховище вже ініціалізовано, тому стартовий пароль з env не активовано."
+            : data.error ||
+                "Вхід тимчасово недоступний. Не вдалося безпечно отримати дані авторизації. Спробуйте пізніше або перевірте Data Blob."
+        );
       } else {
         setErrorMsg(data.error || "Невірний логін або пароль");
       }
