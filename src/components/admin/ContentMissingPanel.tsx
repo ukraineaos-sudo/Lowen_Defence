@@ -13,6 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 import type { ContentHistoryBackup } from "@/src/types/content";
+import { adminFetch } from "@/lib/admin/admin-fetch";
 
 interface ContentMissingPanelProps {
   error: string;
@@ -30,25 +31,21 @@ export const ContentMissingPanel: React.FC<ContentMissingPanelProps> = ({
   const loadHistory = async () => {
     setListError(null);
     setLoading(true);
-    try {
-      const res = await fetch("/api/admin/history", { credentials: "include" });
-      if (!res.ok) {
-        setListError("Не вдалося завантажити історію версій.");
-        setBackups([]);
-        return;
+    const result = await adminFetch<ContentHistoryBackup[]>("/api/admin/history");
+    if (!result.ok) {
+      if (result.error.status !== 401) {
+        setListError(result.error.message || "Не вдалося завантажити історію версій.");
       }
-      const data = await res.json();
-      setBackups(Array.isArray(data) ? data : []);
-    } catch {
-      setListError("Помилка зв’язку із сервером.");
       setBackups([]);
-    } finally {
       setLoading(false);
+      return;
     }
+    setBackups(Array.isArray(result.data) ? result.data : []);
+    setLoading(false);
   };
 
   useEffect(() => {
-    loadHistory();
+    void loadHistory();
   }, []);
 
   const restore = async (timestamp: string) => {
@@ -61,36 +58,34 @@ export const ContentMissingPanel: React.FC<ContentMissingPanelProps> = ({
       return;
     }
     setBusy(true);
-    try {
-      const res = await fetch("/api/admin/rollback", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          timestamp,
-          expectedRevision: null,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.content) {
-        alert("Контент відновлено. Перезавантажуємо адмінку…");
-        router.refresh();
-        window.location.href = "/admin";
-        return;
-      }
-      if (res.status === 409 || data.code === "CONTENT_CONFLICT") {
-        alert(
-          data.error ||
-            "Контент уже з’явився або змінений. Оновіть сторінку."
-        );
-        return;
-      }
-      alert(data.error || "Не вдалося відновити версію.");
-    } catch {
-      alert("Помилка під час відновлення.");
-    } finally {
-      setBusy(false);
+    const result = await adminFetch<{ content?: unknown }>("/api/admin/rollback", {
+      method: "POST",
+      body: JSON.stringify({
+        timestamp,
+        expectedRevision: null,
+      }),
+    });
+    if (result.ok && result.data.content) {
+      alert("Контент відновлено. Перезавантажуємо адмінку…");
+      router.refresh();
+      window.location.href = "/admin";
+      return;
     }
+    if (
+      !result.ok &&
+      (result.error.status === 409 || result.error.code === "CONTENT_CONFLICT")
+    ) {
+      alert(
+        result.error.message ||
+          "Контент уже з’явився або змінений. Оновіть сторінку."
+      );
+      setBusy(false);
+      return;
+    }
+    if (!result.ok && result.error.status !== 401) {
+      alert(result.error.message || "Не вдалося відновити версію.");
+    }
+    setBusy(false);
   };
 
   return (

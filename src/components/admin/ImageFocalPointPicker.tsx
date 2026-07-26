@@ -4,6 +4,7 @@
  */
 import React, { useRef, useState } from "react";
 import { ResponsiveImageData } from "../../types/content";
+import { adminFetch } from "@/lib/admin/admin-fetch";
 import { Upload, Focus, RefreshCw, Smartphone, Monitor, Tablet } from "lucide-react";
 
 interface ImageFocalPointPickerProps {
@@ -57,7 +58,7 @@ export const ImageFocalPointPicker: React.FC<ImageFocalPointPickerProps> = ({
     e.target.value = "";
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
       alert("Будь ласка, оберіть файл зображення (JPEG, PNG, WebP).");
       return;
     }
@@ -69,15 +70,12 @@ export const ImageFocalPointPicker: React.FC<ImageFocalPointPickerProps> = ({
     }
 
     setUploading(true);
-    let dataUrl = "";
     try {
-      dataUrl = await readFileAsDataUrl(file);
+      const dataUrl = await readFileAsDataUrl(file);
       setLocalPreviewUrl(dataUrl);
 
-      const res = await fetch("/api/admin/upload", {
+      const result = await adminFetch<{ url?: string }>("/api/admin/upload", {
         method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           dataUrl,
           fileName: file.name,
@@ -85,16 +83,17 @@ export const ImageFocalPointPicker: React.FC<ImageFocalPointPickerProps> = ({
         }),
       });
 
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.url) {
+      if (result.ok && result.data.url) {
         onChange({
           ...image,
-          url: data.url,
+          url: result.data.url,
           alt: image.alt || file.name.split(".")[0],
         });
         setLocalPreviewUrl(null);
+      } else if (!result.ok && result.error.status !== 401) {
+        alert(result.error.message || "Не вдалося завантажити зображення.");
+        setLocalPreviewUrl(null);
       } else {
-        alert(data.error || "Не вдалося завантажити зображення.");
         setLocalPreviewUrl(null);
       }
     } catch {

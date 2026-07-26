@@ -3,7 +3,7 @@
  */
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { SiteContent } from "../../types/content";
@@ -16,6 +16,10 @@ import { HistoryManager } from "./HistoryManager";
 import { DeviceFramePreview } from "./DeviceFramePreview";
 import { PasswordChangeForm } from "./PasswordChangeForm";
 import { PublicSite } from "@/components/PublicSite";
+import {
+  adminFetch,
+  redirectSessionExpired,
+} from "@/lib/admin/admin-fetch";
 import {
   Shield,
   Save,
@@ -52,7 +56,7 @@ interface AdminShellProps {
   section: AdminSection;
 }
 
-const fetchOpts: RequestInit = { credentials: "include" };
+type Notice = { type: "success" | "warning" | "error"; text: string };
 
 export const AdminShell: React.FC<AdminShellProps> = ({
   initialContent,
@@ -75,8 +79,10 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [storageConfigured, setStorageConfigured] = useState<boolean | null>(null);
   const [storageHint, setStorageHint] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const appsInFlight = useRef(false);
+  const stopAppsPolling = useRef(false);
 
-  // --- 1. Unsaved: порівняння draft vs збереженого ---
   useEffect(() => {
     setHasUnsavedChanges(
       JSON.stringify(content) !== JSON.stringify(savedContent)
@@ -93,48 +99,69 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  // --- 2. Session / storageConfigured з API ---
   useEffect(() => {
-    fetch("/api/auth/session", fetchOpts)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.storageConfigured !== undefined) {
-          setStorageConfigured(data.storageConfigured);
-        }
-        if (data.storage) {
-          const missing: string[] = [];
-          if (!data.storage.data?.configured) missing.push("Data Blob");
-          if (!data.storage.media?.configured) missing.push("Media Blob");
-          setStorageHint(
-            missing.length
-              ? `Не налаштовано: ${missing.join(", ")}. Локально — data/; на проді потрібні обидва токени.`
-              : null
-          );
-        }
-      })
-      .catch(() => {});
+    void (async () => {
+      const result = await adminFetch<{
+        authenticated?: boolean;
+        storageConfigured?: boolean;
+        storage?: {
+          data?: { configured?: boolean };
+          media?: { configured?: boolean };
+        };
+      }>("/api/auth/session");
+      if (!result.ok) return;
+      if (result.data.authenticated === false) {
+        redirectSessionExpired();
+        return;
+      }
+      if (result.data.storageConfigured !== undefined) {
+        setStorageConfigured(result.data.storageConfigured);
+      }
+      if (result.data.storage) {
+        const missing: string[] = [];
+        if (!result.data.storage.data?.configured) missing.push("Data Blob");
+        if (!result.data.storage.media?.configured) missing.push("Media Blob");
+        setStorageHint(
+          missing.length
+            ? `Не налаштовано: ${missing.join(", ")}. Локально — data/; на проді потрібні обидва токени.`
+            : null
+        );
+      }
+    })();
   }, []);
 
-  // --- 3. Заявки: список + polling ---
   const fetchApplications = async () => {
+    if (appsInFlight.current || stopAppsPolling.current) return;
+    appsInFlight.current = true;
     try {
-      const res = await fetch("/api/admin/applications", fetchOpts);
-      if (res.ok) {
-        const data = await res.json();
-        setApplications(data.applications || data);
+      const result = await adminFetch<{
+        applications?: CourseApplication[];
+      }>("/api/admin/applications");
+      if (!result.ok) {
+        if (result.error.status === 401) {
+          stopAppsPolling.current = true;
+          return;
+        }
+        if (result.error.status === 503) {
+          setNotice({ type: "warning", text: result.error.message });
+        }
+        return;
       }
-    } catch (err) {
-      console.error("Error fetching applications:", err);
+      setApplications(result.data.applications || []);
+      setNotice((prev) => (prev?.type === "warning" ? null : prev));
+    } finally {
+      appsInFlight.current = false;
     }
   };
 
   useEffect(() => {
-    fetchApplications();
-    const interval = setInterval(fetchApplications, 30000);
+    void fetchApplications();
+    const interval = setInterval(() => {
+      void fetchApplications();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // --- 4. Навігація між /admin/* ---
   const navigate = (next: AdminSection) => {
     if (hasUnsavedChanges && !confirm("Є незбережені зміни. Перейти без збереження?")) {
       return;
@@ -152,48 +179,55 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     router.push(map[next]);
   };
 
-  // --- 5. Зберегти / скасувати контент (OCC) ---
   const handleSaveContent = async () => {
     setSaving(true);
     setSaveSuccess(false);
 
-    try {
-      const res = await fetch("/api/admin/content", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          expectedRevision: revision,
-          content,
-        }),
-      });
+    const result = await adminFetch<{
+      success?: boolean;
+      content?: SiteContent;
+      revision?: string;
+      code?: string;
+      message?: string;
+    }>("/api/admin/content", {
+      method: "POST",
+      body: JSON.stringify({
+        expectedRevision: revision,
+        content,
+      }),
+    });
 
-      const data = await res.json();
-      if (res.ok && data.success) {
-        const next = structuredClone(data.content);
-        setSavedContent(next);
-        setContent(structuredClone(next));
-        setRevision(
-          typeof data.revision === "string" ? data.revision : revision
-        );
-        setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 3000);
-        if (data.code === "CONTENT_STATE_WRITE_FAILED") {
-          alert(
-            data.error ||
-              "Контент збережено, але state marker не оновлено. Збережіть ще раз."
-          );
-        }
-      } else if (res.status === 409 || data.code === "CONTENT_CONFLICT") {
-        setConflictOpen(true);
-      } else {
-        alert(data.error || "Не вдалося зберегти зміни.");
+    if (result.ok && result.data.success && result.data.content) {
+      const next = structuredClone(result.data.content);
+      setSavedContent(next);
+      setContent(structuredClone(next));
+      setRevision(
+        typeof result.data.revision === "string"
+          ? result.data.revision
+          : revision
+      );
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+      if (result.data.code === "CONTENT_STATE_WRITE_FAILED") {
+        setNotice({
+          type: "warning",
+          text:
+            result.data.message ||
+            "Контент збережено, але state marker не оновлено. Збережіть ще раз.",
+        });
       }
-    } catch {
-      alert("Помилка збереження на сервері.");
-    } finally {
-      setSaving(false);
+    } else if (
+      !result.ok &&
+      (result.error.status === 409 || result.error.code === "CONTENT_CONFLICT")
+    ) {
+      setConflictOpen(true);
+    } else if (!result.ok && result.error.status !== 401) {
+      setNotice({
+        type: "error",
+        text: result.error.message || "Не вдалося зберегти зміни.",
+      });
     }
+    setSaving(false);
   };
 
   const loadRemoteVersion = async () => {
@@ -204,21 +238,33 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     ) {
       return;
     }
-    try {
-      const res = await fetch("/api/admin/content", fetchOpts);
-      const data = await res.json();
-      if (!res.ok || !data.content) {
-        alert(data.error || "Не вдалося завантажити актуальну версію.");
-        return;
+    const result = await adminFetch<{
+      content?: SiteContent;
+      revision?: string;
+    }>("/api/admin/content");
+    if (!result.ok) {
+      if (result.error.status !== 401) {
+        setNotice({
+          type: "error",
+          text: result.error.message || "Не вдалося завантажити актуальну версію.",
+        });
       }
-      const next = structuredClone(data.content);
-      setContent(next);
-      setSavedContent(structuredClone(next));
-      setRevision(typeof data.revision === "string" ? data.revision : null);
-      setConflictOpen(false);
-    } catch {
-      alert("Помилка завантаження актуальної версії.");
+      return;
     }
+    if (!result.data.content) {
+      setNotice({
+        type: "error",
+        text: "Не вдалося завантажити актуальну версію.",
+      });
+      return;
+    }
+    const next = structuredClone(result.data.content);
+    setContent(next);
+    setSavedContent(structuredClone(next));
+    setRevision(
+      typeof result.data.revision === "string" ? result.data.revision : null
+    );
+    setConflictOpen(false);
   };
 
   const handleCancelChanges = () => {
@@ -227,40 +273,45 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     }
   };
 
-  // --- 6. Статус / видалення заявок ---
   const handleUpdateApplicationStatus = async (
     id: string,
     status: ApplicationStatus
   ) => {
-    try {
-      const res = await fetch(`/api/admin/applications/${id}`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+    const result = await adminFetch(`/api/admin/applications/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+    if (result.ok) {
+      void fetchApplications();
+      return;
+    }
+    if (result.error.status !== 401) {
+      setNotice({
+        type: "error",
+        text: result.error.message || "Не вдалося оновити статус заявки.",
       });
-      if (res.ok) fetchApplications();
-    } catch {
-      alert("Не вдалося оновити статус заявки.");
     }
   };
 
   const handleDeleteApplication = async (id: string) => {
-    try {
-      const res = await fetch(`/api/admin/applications/${id}`, {
-        method: "DELETE",
-        credentials: "include",
+    const result = await adminFetch(`/api/admin/applications/${id}`, {
+      method: "DELETE",
+    });
+    if (result.ok) {
+      void fetchApplications();
+      return;
+    }
+    if (result.error.status !== 401) {
+      setNotice({
+        type: "error",
+        text: result.error.message || "Не вдалося видалити заявку.",
       });
-      if (res.ok) fetchApplications();
-    } catch {
-      alert("Не вдалося видалити заявку.");
     }
   };
 
-  // --- 7. Logout ---
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+      await adminFetch("/api/auth/logout", { method: "POST" });
     } catch {
       /* ignore */
     }
@@ -281,7 +332,6 @@ export const AdminShell: React.FC<AdminShellProps> = ({
 
   return (
     <div className="min-h-screen bg-[#f1f5f3] text-[#13241c] flex flex-col">
-      {/* --- 8. Header: бренд, бейджі, Save / сайт / logout --- */}
       <header className="bg-[#082d20] text-white sticky top-0 z-50 border-b border-[#13563a] shadow-md">
         <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -389,7 +439,6 @@ export const AdminShell: React.FC<AdminShellProps> = ({
           </div>
         </div>
 
-        {/* --- 9. Таби секцій --- */}
         <div className="max-w-7xl mx-auto px-4 flex items-center gap-1 overflow-x-auto text-xs font-extrabold pb-2">
           <button type="button" onClick={() => navigate("dashboard")} className={tabClass("dashboard")}>
             <LayoutDashboard className="w-4 h-4" />
@@ -431,7 +480,6 @@ export const AdminShell: React.FC<AdminShellProps> = ({
         </div>
       </header>
 
-      {/* --- 10. Тіло: dashboard / editors за section --- */}
       <main className="max-w-7xl mx-auto w-full px-4 py-6 flex-1">
         {storageConfigured === false && (
           <div className="mb-4 p-3 bg-amber-50 border border-amber-300 text-amber-900 rounded-xl flex items-center gap-2 text-xs font-bold">
@@ -440,6 +488,30 @@ export const AdminShell: React.FC<AdminShellProps> = ({
               {storageHint ||
                 "Локальний режим: дані пишуться в data/. Для продакшену додайте обидва Blob-токени (Data + Media) у Vercel."}
             </span>
+          </div>
+        )}
+
+        {notice && (
+          <div
+            className={`mb-4 p-3 rounded-xl flex items-center justify-between gap-2 text-xs font-bold border ${
+              notice.type === "error"
+                ? "bg-red-50 border-red-200 text-red-800"
+                : notice.type === "warning"
+                  ? "bg-amber-50 border-amber-300 text-amber-900"
+                  : "bg-green-50 border-green-200 text-green-800"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{notice.text}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setNotice(null)}
+              className="underline opacity-80 hover:opacity-100"
+            >
+              Закрити
+            </button>
           </div>
         )}
 

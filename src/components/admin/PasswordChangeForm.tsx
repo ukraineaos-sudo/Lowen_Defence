@@ -5,6 +5,7 @@
 
 import React, { useState } from "react";
 import { KeyRound, Loader2, Check, AlertCircle } from "lucide-react";
+import { adminFetch } from "@/lib/admin/admin-fetch";
 
 export const PasswordChangeForm: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -31,20 +32,20 @@ export const PasswordChangeForm: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/password", {
+      const result = await adminFetch<{
+        success?: boolean;
+        message?: string;
+      }>("/api/admin/password", {
         method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
       });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setSuccess(data.message || "Пароль змінено");
+      if (result.ok && result.data.success) {
+        setSuccess(result.data.message || "Пароль змінено");
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
-      } else {
-        setError(data.error || "Не вдалося змінити пароль");
+      } else if (!result.ok && result.error.status !== 401) {
+        setError(result.error.message || "Не вдалося змінити пароль");
       }
     } catch {
       setError("Помилка зв’язку із сервером");

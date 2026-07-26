@@ -3,6 +3,7 @@
  */
 import React, { useState, useEffect } from "react";
 import { ContentHistoryBackup, SiteContent } from "../../types/content";
+import { adminFetch } from "@/lib/admin/admin-fetch";
 import { History, RotateCcw, Clock, ShieldAlert } from "lucide-react";
 
 interface HistoryManagerProps {
@@ -19,30 +20,25 @@ export const HistoryManager: React.FC<HistoryManagerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [rollingBack, setRollingBack] = useState(false);
 
-  // --- 1. Завантажити список backup ---
   const fetchHistory = async () => {
     setError(null);
     setLoading(true);
-    try {
-      const res = await fetch("/api/admin/history", { credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        setBackups(data);
-      } else {
-        setError("Не вдалося завантажити історію версій.");
+    const result = await adminFetch<ContentHistoryBackup[]>("/api/admin/history");
+    if (!result.ok) {
+      if (result.error.status !== 401) {
+        setError(result.error.message || "Не вдалося завантажити історію версій.");
       }
-    } catch {
-      setError("Помилка зв’язку із сервером.");
-    } finally {
       setLoading(false);
+      return;
     }
+    setBackups(Array.isArray(result.data) ? result.data : []);
+    setLoading(false);
   };
 
   useEffect(() => {
-    fetchHistory();
+    void fetchHistory();
   }, []);
 
-  // --- 2. Rollback обраної версії ---
   const handleRollback = async (backup: ContentHistoryBackup) => {
     if (rollingBack) return;
     if (
@@ -54,38 +50,36 @@ export const HistoryManager: React.FC<HistoryManagerProps> = ({
     }
 
     setRollingBack(true);
-    try {
-      const res = await fetch("/api/admin/rollback", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          timestamp: backup.timestamp,
-          expectedRevision,
-        }),
-      });
+    const result = await adminFetch<{
+      content?: SiteContent;
+      revision?: string;
+    }>("/api/admin/rollback", {
+      method: "POST",
+      body: JSON.stringify({
+        timestamp: backup.timestamp,
+        expectedRevision,
+      }),
+    });
 
-      const data = await res.json();
-      if (res.ok && data.content) {
-        onRestore(
-          data.content,
-          typeof data.revision === "string" ? data.revision : null
-        );
-        await fetchHistory();
-        alert("Версію успішно відновлено!");
-      } else if (res.status === 409 || data.code === "CONTENT_CONFLICT") {
-        alert(
-          data.error ||
-            "Контент уже змінено в іншій вкладці. Оновіть сторінку та спробуйте знову."
-        );
-      } else {
-        alert(data.error || "Не вдалося відновити версію.");
-      }
-    } catch {
-      alert("Помилка під час відновлення.");
-    } finally {
-      setRollingBack(false);
+    if (result.ok && result.data.content) {
+      onRestore(
+        result.data.content,
+        typeof result.data.revision === "string" ? result.data.revision : null
+      );
+      await fetchHistory();
+      alert("Версію успішно відновлено!");
+    } else if (
+      !result.ok &&
+      (result.error.status === 409 || result.error.code === "CONTENT_CONFLICT")
+    ) {
+      alert(
+        result.error.message ||
+          "Контент уже змінено в іншій вкладці. Оновіть сторінку та спробуйте знову."
+      );
+    } else if (!result.ok && result.error.status !== 401) {
+      alert(result.error.message || "Не вдалося відновити версію.");
     }
+    setRollingBack(false);
   };
 
   return (
@@ -103,7 +97,7 @@ export const HistoryManager: React.FC<HistoryManagerProps> = ({
 
         <button
           type="button"
-          onClick={fetchHistory}
+          onClick={() => void fetchHistory()}
           disabled={loading || rollingBack}
           className="btn btn-secondary text-xs py-1.5 px-3 text-[#082d20] border-gray-300 disabled:opacity-50"
         >
@@ -145,7 +139,7 @@ export const HistoryManager: React.FC<HistoryManagerProps> = ({
 
               <button
                 type="button"
-                onClick={() => handleRollback(backup)}
+                onClick={() => void handleRollback(backup)}
                 disabled={rollingBack}
                 className="btn btn-dark text-xs py-1.5 px-3 flex items-center gap-1.5 self-end sm:self-center disabled:opacity-50"
               >

@@ -7,9 +7,14 @@ import { Shield, Lock, User, AlertCircle, Loader2 } from "lucide-react";
 interface AdminLoginProps {
   onSuccess: (token: string, username: string) => void;
   onClose?: () => void;
+  sessionExpired?: boolean;
 }
 
-export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onClose }) => {
+export const AdminLogin: React.FC<AdminLoginProps> = ({
+  onSuccess,
+  onClose,
+  sessionExpired = false,
+}) => {
   const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -63,6 +68,13 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onClose }) =>
             Löwen Defence® Україна · Вхід для адміністратора
           </p>
         </div>
+
+        {sessionExpired && (
+          <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-xl flex items-center gap-2 border border-amber-300">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>Сесію завершено. Увійдіть знову.</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

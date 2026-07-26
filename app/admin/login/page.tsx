@@ -8,9 +8,11 @@ function LoginInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/admin";
+  const sessionExpired = searchParams.get("reason") === "session_expired";
 
   return (
     <AdminLogin
+      sessionExpired={sessionExpired}
       onSuccess={() => {
         router.replace(next.startsWith("/admin") ? next : "/admin");
         router.refresh();
