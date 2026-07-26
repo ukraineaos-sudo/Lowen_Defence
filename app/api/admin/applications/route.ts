@@ -4,17 +4,23 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromCookies } from "@/lib/auth/session";
+import { apiErrorResponse } from "@/lib/api/errors";
 import { listApplications } from "@/lib/applications/store";
 import { parseApplicationStatus } from "@/lib/applications/status";
 
 export async function GET(req: NextRequest) {
   const session = await getSessionFromCookies();
   if (!session) {
-    return NextResponse.json({ error: "Неавторизований доступ" }, { status: 401 });
+    return apiErrorResponse("UNAUTHORIZED", "Неавторизований доступ");
+  }
+
+  const listed = await listApplications();
+  if (!listed.success) {
+    return apiErrorResponse(listed.code, listed.error);
   }
 
   const statusParam = req.nextUrl.searchParams.get("status");
-  const all = await listApplications();
+  const all = listed.applications;
   const newCount = all.filter((a) => a.status === "new").length;
   const filterStatus = statusParam ? parseApplicationStatus(statusParam) : null;
   const apps = filterStatus

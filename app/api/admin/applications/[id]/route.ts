@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { assertSameOrigin } from "@/lib/auth/csrf";
 import { getSessionFromCookies } from "@/lib/auth/session";
+import { apiErrorResponse } from "@/lib/api/errors";
 import {
   deleteApplication,
   updateApplicationStatus,
@@ -14,51 +15,43 @@ type Ctx = { params: Promise<{ id: string }> };
 
 export async function PATCH(req: NextRequest, ctx: Ctx) {
   if (!assertSameOrigin(req)) {
-    return NextResponse.json({ error: "Невірний Origin" }, { status: 403 });
+    return apiErrorResponse("CSRF_REJECTED", "Невірний Origin");
   }
   const session = await getSessionFromCookies();
   if (!session) {
-    return NextResponse.json({ error: "Неавторизований доступ" }, { status: 401 });
+    return apiErrorResponse("UNAUTHORIZED", "Неавторизований доступ");
   }
 
   const { id } = await ctx.params;
   const body = await req.json().catch(() => ({}));
   const status = parseApplicationStatus(body.status);
   if (!status) {
-    return NextResponse.json(
-      { error: "Некоректний status (очікується new | processed)", code: "VALIDATION" },
-      { status: 400 }
+    return apiErrorResponse(
+      "APPLICATION_VALIDATION_FAILED",
+      "Некоректний status (очікується new | processed)"
     );
   }
 
   const result = await updateApplicationStatus(id, status);
   if (!result.success) {
-    const notFound = /не знайден/i.test(result.error || "");
-    return NextResponse.json(
-      { error: result.error },
-      { status: notFound ? 404 : 400 }
-    );
+    return apiErrorResponse(result.code, result.error);
   }
-  return NextResponse.json({ success: true, application: result.application });
+  return NextResponse.json({ success: true, application: result.data });
 }
 
 export async function DELETE(req: NextRequest, ctx: Ctx) {
   if (!assertSameOrigin(req)) {
-    return NextResponse.json({ error: "Невірний Origin" }, { status: 403 });
+    return apiErrorResponse("CSRF_REJECTED", "Невірний Origin");
   }
   const session = await getSessionFromCookies();
   if (!session) {
-    return NextResponse.json({ error: "Неавторизований доступ" }, { status: 401 });
+    return apiErrorResponse("UNAUTHORIZED", "Неавторизований доступ");
   }
 
   const { id } = await ctx.params;
   const result = await deleteApplication(id);
   if (!result.success) {
-    const notFound = /не знайден/i.test(result.error || "");
-    return NextResponse.json(
-      { error: result.error },
-      { status: notFound ? 404 : 400 }
-    );
+    return apiErrorResponse(result.code, result.error);
   }
   return NextResponse.json({ success: true });
 }

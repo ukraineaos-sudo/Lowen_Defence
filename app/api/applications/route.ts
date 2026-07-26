@@ -96,17 +96,25 @@ export async function POST(req: NextRequest) {
   });
 
   if (!result.success) {
+    const status =
+      result.code === "APPLICATION_STORAGE_UNAVAILABLE" ||
+      result.code === "APPLICATION_STORAGE_MISSING"
+        ? 503
+        : 400;
     return NextResponse.json(
-      { error: result.error || "Не вдалося зберегти заявку" },
-      { status: 400 }
+      {
+        error: result.error || "Не вдалося зберегти заявку",
+        code: result.code,
+      },
+      { status }
     );
   }
 
   // --- 5. Email (Brevo): await + короткий timeout, щоб Vercel не обірвав void ---
   await Promise.race([
-    notifyApplicationByEmail(result.application),
+    notifyApplicationByEmail(result.data),
     new Promise<void>((resolve) => setTimeout(resolve, 2500)),
   ]);
 
-  return NextResponse.json({ success: true, id: result.application.id });
+  return NextResponse.json({ success: true, id: result.data.id });
 }
