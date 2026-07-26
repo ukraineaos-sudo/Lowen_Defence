@@ -10,6 +10,16 @@ export async function GET() {
   if (!session) {
     return NextResponse.json({ error: "Неавторизований доступ" }, { status: 401 });
   }
-  const history = await listContentHistory();
-  return NextResponse.json(history);
+  try {
+    const history = await listContentHistory();
+    return NextResponse.json(history);
+  } catch {
+    return NextResponse.json(
+      {
+        error: "Сховище тимчасово недоступне",
+        code: "STORAGE_UNAVAILABLE",
+      },
+      { status: 503 }
+    );
+  }
 }

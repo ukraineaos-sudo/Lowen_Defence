@@ -13,9 +13,11 @@ export const HistoryManager: React.FC<HistoryManagerProps> = ({ onRestore }) => 
   const [backups, setBackups] = useState<ContentHistoryBackup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [rollingBack, setRollingBack] = useState(false);
 
   // --- 1. Завантажити список backup ---
   const fetchHistory = async () => {
+    setError(null);
     setLoading(true);
     try {
       const res = await fetch("/api/admin/history", { credentials: "include" });
@@ -25,7 +27,7 @@ export const HistoryManager: React.FC<HistoryManagerProps> = ({ onRestore }) => 
       } else {
         setError("Не вдалося завантажити історію версій.");
       }
-    } catch (err) {
+    } catch {
       setError("Помилка зв’язку із сервером.");
     } finally {
       setLoading(false);
@@ -38,6 +40,7 @@ export const HistoryManager: React.FC<HistoryManagerProps> = ({ onRestore }) => 
 
   // --- 2. Rollback обраної версії ---
   const handleRollback = async (backup: ContentHistoryBackup) => {
+    if (rollingBack) return;
     if (
       !confirm(
         `Ви дійсно бажаєте відновити версію від ${backup.updatedAt}? Поточні незбережені зміни будуть замінені.`
@@ -46,6 +49,7 @@ export const HistoryManager: React.FC<HistoryManagerProps> = ({ onRestore }) => 
       return;
     }
 
+    setRollingBack(true);
     try {
       const res = await fetch("/api/admin/rollback", {
         method: "POST",
@@ -57,12 +61,15 @@ export const HistoryManager: React.FC<HistoryManagerProps> = ({ onRestore }) => 
       const data = await res.json();
       if (res.ok && data.content) {
         onRestore(data.content);
+        await fetchHistory();
         alert("Версію успішно відновлено!");
       } else {
         alert(data.error || "Не вдалося відновити версію.");
       }
-    } catch (err) {
+    } catch {
       alert("Помилка під час відновлення.");
+    } finally {
+      setRollingBack(false);
     }
   };
 
@@ -80,8 +87,10 @@ export const HistoryManager: React.FC<HistoryManagerProps> = ({ onRestore }) => 
         </div>
 
         <button
+          type="button"
           onClick={fetchHistory}
-          className="btn btn-secondary text-xs py-1.5 px-3 text-[#082d20] border-gray-300"
+          disabled={loading || rollingBack}
+          className="btn btn-secondary text-xs py-1.5 px-3 text-[#082d20] border-gray-300 disabled:opacity-50"
         >
           Оновити список
         </button>
@@ -120,11 +129,13 @@ export const HistoryManager: React.FC<HistoryManagerProps> = ({ onRestore }) => 
               </div>
 
               <button
+                type="button"
                 onClick={() => handleRollback(backup)}
-                className="btn btn-dark text-xs py-1.5 px-3 flex items-center gap-1.5 self-end sm:self-center"
+                disabled={rollingBack}
+                className="btn btn-dark text-xs py-1.5 px-3 flex items-center gap-1.5 self-end sm:self-center disabled:opacity-50"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Відновити цю версію</span>
+                <span>{rollingBack ? "Відновлення…" : "Відновити цю версію"}</span>
               </button>
             </div>
           ))}

@@ -23,13 +23,12 @@ export const TeamEditor: React.FC<TeamEditorProps> = ({
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= team.length) return;
 
-    const newTeam = [...team];
-    const temp = newTeam[index];
-    newTeam[index] = newTeam[targetIndex];
-    newTeam[targetIndex] = temp;
-
-    newTeam.forEach((m, idx) => (m.order = idx + 1));
-    onChange(newTeam);
+    const swapped = team.map((m, i) => {
+      if (i === index) return team[targetIndex]!;
+      if (i === targetIndex) return team[index]!;
+      return m;
+    });
+    onChange(swapped.map((member, i) => ({ ...member, order: i + 1 })));
   };
 
   const toggleEnabled = (id: string) => {
@@ -67,8 +66,9 @@ export const TeamEditor: React.FC<TeamEditorProps> = ({
 
   const deleteMember = (id: string, name: string) => {
     if (confirm(`Ви дійсно бажаєте видалити учасника "${name}"?`)) {
-      const filtered = team.filter((m) => m.id !== id);
-      filtered.forEach((m, idx) => (m.order = idx + 1));
+      const filtered = team
+        .filter((m) => m.id !== id)
+        .map((m, idx) => ({ ...m, order: idx + 1 }));
       onChange(filtered);
       if (editingId === id) {
         setEditingId(filtered[0]?.id || null);

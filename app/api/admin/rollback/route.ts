@@ -26,9 +26,10 @@ export async function POST(req: NextRequest) {
 
   const result = await rollbackContent(timestamp);
   if (!result.success) {
+    const status = result.code === "STORAGE_UNAVAILABLE" ? 503 : result.code === "NOT_FOUND" ? 404 : 400;
     return NextResponse.json(
-      { error: result.error || "Сховище ще не налаштовано" },
-      { status: 400 }
+      { error: result.error || "Сховище ще не налаштовано", code: result.code },
+      { status }
     );
   }
   return NextResponse.json({ success: true, content: result.content });

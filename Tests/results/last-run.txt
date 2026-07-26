@@ -1,14 +1,2 @@
-Vitest run — 2026-07-24
-
-Test Files  5 passed (5)
-Tests       20 passed (20)
-
-Suites:
-- form-guards.test.ts     3 passed
-- password.test.ts        5 passed
-- rate-limit.test.ts      3 passed
-- session.test.ts         4 passed
-- validate-content.test.ts 5 passed
-
-JSON: Tests/results/vitest-report.json
-Command: npm test
+Vitest — 23 passed (7 files)
+application-status + storage-status added

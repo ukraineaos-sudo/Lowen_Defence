@@ -18,11 +18,13 @@ export const ImageFocalPointPicker: React.FC<ImageFocalPointPickerProps> = ({
   onChange,
 }) => {
   const [uploading, setUploading] = useState(false);
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState<"desktop" | "tablet" | "mobile">("desktop");
   const imageRef = useRef<HTMLImageElement>(null);
 
   const focalX = image.focalX ?? 50;
   const focalY = image.focalY ?? 50;
+  const displayUrl = localPreviewUrl || image.url;
 
   // --- 1. Клік = focal point у % ---
   const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
@@ -41,9 +43,18 @@ export const ImageFocalPointPicker: React.FC<ImageFocalPointPickerProps> = ({
     });
   };
 
-  // --- 2. Upload → /api/admin/upload (fallback dataURL) ---
+  // --- 2. Upload → /api/admin/upload (без запису data: URL у content) ---
+  const readFileAsDataUrl = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(reader.error || new Error("FileReader failed"));
+      reader.readAsDataURL(file);
+    });
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
@@ -58,52 +69,38 @@ export const ImageFocalPointPicker: React.FC<ImageFocalPointPickerProps> = ({
     }
 
     setUploading(true);
-
+    let dataUrl = "";
     try {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const dataUrl = reader.result as string;
+      dataUrl = await readFileAsDataUrl(file);
+      setLocalPreviewUrl(dataUrl);
 
-        // Try server upload endpoint
-        const res = await fetch("/api/admin/upload", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            dataUrl,
-            fileName: file.name,
-            folder: folderName,
-          }),
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dataUrl,
+          fileName: file.name,
+          folder: folderName,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.url) {
+        onChange({
+          ...image,
+          url: data.url,
+          alt: image.alt || file.name.split(".")[0],
         });
-
-        const data = await res.json();
-        if (res.ok && data.url) {
-          onChange({
-            ...image,
-            url: data.url,
-            alt: image.alt || file.name.split(".")[0],
-          });
-        } else if (data && data.error) {
-          alert(data.error);
-          // Still update local preview with dataUrl for instant feedback
-          onChange({
-            ...image,
-            url: dataUrl,
-            alt: image.alt || file.name.split(".")[0],
-          });
-        } else {
-          // Fallback to dataUrl in client state
-          onChange({
-            ...image,
-            url: dataUrl,
-            alt: image.alt || file.name.split(".")[0],
-          });
-        }
-        setUploading(false);
-      };
-      reader.readAsDataURL(file);
-    } catch (err) {
+        setLocalPreviewUrl(null);
+      } else {
+        alert(data.error || "Не вдалося завантажити зображення.");
+        setLocalPreviewUrl(null);
+      }
+    } catch {
       alert("Помилка завантаження файлу.");
+      setLocalPreviewUrl(null);
+    } finally {
       setUploading(false);
     }
   };
@@ -160,7 +157,7 @@ export const ImageFocalPointPicker: React.FC<ImageFocalPointPickerProps> = ({
       </div>
 
       {/* Interactive Focal Point Picker */}
-      {image.url && (
+      {displayUrl && (
         <div className="space-y-2">
           <p className="text-[0.75rem] text-[#64726a]">
             💡 Клікніть по зображенню в потрібному місці, щоб встановити точку фокусу для обрізання на телефонах і планшетах.
@@ -169,7 +166,7 @@ export const ImageFocalPointPicker: React.FC<ImageFocalPointPickerProps> = ({
           <div className="relative group overflow-hidden rounded-xl border border-gray-300 bg-gray-900 flex items-center justify-center min-h-[200px] cursor-crosshair">
             <img
               ref={imageRef}
-              src={image.url}
+              src={displayUrl}
               alt={image.alt || "Preview"}
               onClick={handleImageClick}
               className="w-full max-h-[260px] object-contain select-none"
@@ -238,7 +235,7 @@ export const ImageFocalPointPicker: React.FC<ImageFocalPointPickerProps> = ({
               }`}
             >
               <img
-                src={image.url}
+                src={displayUrl}
                 alt={image.alt}
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover"

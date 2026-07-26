@@ -93,9 +93,21 @@ export function sessionCookieOptions(maxAgeSeconds = SESSION_TTL_MS / 1000) {
   };
 }
 
-/** 5. Чи є хоч один Blob-токен (банер у адмінці). */
+/** 5. Статус Blob-сховищ (Data + Media окремо). */
+export function getStorageStatus() {
+  const data = Boolean(dataBlobToken());
+  const media = Boolean(mediaBlobToken());
+  return {
+    data: { configured: data },
+    media: { configured: media },
+    /** Обидва токени є — повний прод-режим адмінки */
+    ready: data && media,
+  };
+}
+
+/** Зворотна сумісність: true лише якщо Data і Media налаштовані. */
 export function isStorageConfigured(): boolean {
-  return Boolean(dataBlobToken() || mediaBlobToken());
+  return getStorageStatus().ready;
 }
 
 /** 6. Логін адміна з env (дефолт admin). */

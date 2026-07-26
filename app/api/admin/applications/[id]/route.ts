@@ -8,7 +8,7 @@ import {
   deleteApplication,
   updateApplicationStatus,
 } from "@/lib/applications/store";
-import type { ApplicationStatus } from "@/src/types/application";
+import { parseApplicationStatus } from "@/lib/applications/status";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -23,14 +23,21 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 
   const { id } = await ctx.params;
   const body = await req.json().catch(() => ({}));
-  const status = body.status as ApplicationStatus;
+  const status = parseApplicationStatus(body.status);
   if (!status) {
-    return NextResponse.json({ error: "status обов'язковий" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Некоректний status (очікується new | processed)", code: "VALIDATION" },
+      { status: 400 }
+    );
   }
 
   const result = await updateApplicationStatus(id, status);
   if (!result.success) {
-    return NextResponse.json({ error: result.error }, { status: 400 });
+    const notFound = /не знайден/i.test(result.error || "");
+    return NextResponse.json(
+      { error: result.error },
+      { status: notFound ? 404 : 400 }
+    );
   }
   return NextResponse.json({ success: true, application: result.application });
 }
@@ -47,7 +54,11 @@ export async function DELETE(req: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
   const result = await deleteApplication(id);
   if (!result.success) {
-    return NextResponse.json({ error: result.error }, { status: 400 });
+    const notFound = /не знайден/i.test(result.error || "");
+    return NextResponse.json(
+      { error: result.error },
+      { status: notFound ? 404 : 400 }
+    );
   }
   return NextResponse.json({ success: true });
 }

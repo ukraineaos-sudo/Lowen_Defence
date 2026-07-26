@@ -32,14 +32,12 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= courses.length) return;
 
-    const newCourses = [...courses];
-    const temp = newCourses[index];
-    newCourses[index] = newCourses[targetIndex];
-    newCourses[targetIndex] = temp;
-
-    // update order sequence
-    newCourses.forEach((c, idx) => (c.order = idx + 1));
-    onChange(newCourses);
+    const swapped = courses.map((c, i) => {
+      if (i === index) return courses[targetIndex]!;
+      if (i === targetIndex) return courses[index]!;
+      return c;
+    });
+    onChange(swapped.map((course, i) => ({ ...course, order: i + 1 })));
   };
 
   const toggleField = (id: string, field: "enabled" | "featured") => {
@@ -106,8 +104,9 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
 
   const deleteCourse = (id: string, title: string) => {
     if (confirm(`Ви дійсно бажаєте видалити курс "${title}"?`)) {
-      const filtered = courses.filter((c) => c.id !== id);
-      filtered.forEach((c, idx) => (c.order = idx + 1));
+      const filtered = courses
+        .filter((c) => c.id !== id)
+        .map((c, idx) => ({ ...c, order: idx + 1 }));
       onChange(filtered);
       if (editingId === id) {
         setEditingId(filtered[0]?.id || null);

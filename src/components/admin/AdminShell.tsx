@@ -59,13 +59,18 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   section,
 }) => {
   const router = useRouter();
-  const [content, setContent] = useState<SiteContent>(initialContent);
-  const [savedContent, setSavedContent] = useState<SiteContent>(initialContent);
+  const [content, setContent] = useState<SiteContent>(() =>
+    structuredClone(initialContent)
+  );
+  const [savedContent, setSavedContent] = useState<SiteContent>(() =>
+    structuredClone(initialContent)
+  );
   const [applications, setApplications] = useState<CourseApplication[]>([]);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [storageConfigured, setStorageConfigured] = useState<boolean | null>(null);
+  const [storageHint, setStorageHint] = useState<string | null>(null);
 
   // --- 1. Unsaved: порівняння draft vs збереженого ---
   useEffect(() => {
@@ -91,6 +96,16 @@ export const AdminShell: React.FC<AdminShellProps> = ({
       .then((data) => {
         if (data.storageConfigured !== undefined) {
           setStorageConfigured(data.storageConfigured);
+        }
+        if (data.storage) {
+          const missing: string[] = [];
+          if (!data.storage.data?.configured) missing.push("Data Blob");
+          if (!data.storage.media?.configured) missing.push("Media Blob");
+          setStorageHint(
+            missing.length
+              ? `Не налаштовано: ${missing.join(", ")}. Локально — data/; на проді потрібні обидва токени.`
+              : null
+          );
         }
       })
       .catch(() => {});
@@ -148,8 +163,9 @@ export const AdminShell: React.FC<AdminShellProps> = ({
 
       const data = await res.json();
       if (res.ok && data.success) {
-        setSavedContent(data.content);
-        setContent(data.content);
+        const next = structuredClone(data.content);
+        setSavedContent(next);
+        setContent(structuredClone(next));
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
       } else {
@@ -164,7 +180,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
 
   const handleCancelChanges = () => {
     if (confirm("Скасувати незбережені зміни?")) {
-      setContent(savedContent);
+      setContent(structuredClone(savedContent));
     }
   };
 
@@ -378,7 +394,8 @@ export const AdminShell: React.FC<AdminShellProps> = ({
           <div className="mb-4 p-3 bg-amber-50 border border-amber-300 text-amber-900 rounded-xl flex items-center gap-2 text-xs font-bold">
             <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
             <span>
-              Локальний режим: дані пишуться в <code>data/</code>. Для продакшену додайте Blob-токени у Vercel.
+              {storageHint ||
+                "Локальний режим: дані пишуться в data/. Для продакшену додайте обидва Blob-токени (Data + Media) у Vercel."}
             </span>
           </div>
         )}

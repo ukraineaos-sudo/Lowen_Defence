@@ -75,18 +75,16 @@ export async function POST(req: NextRequest) {
   }
 
   const courseId = String(body.courseId || body.course || "").trim() || "custom";
-  let courseTitleSnapshot = String(body.courseTitleSnapshot || "").trim();
-
-  if (!courseTitleSnapshot) {
-    const content = await readSiteContent();
-    const course = content.courses.find((c) => c.id === courseId);
-    if (course) {
-      courseTitleSnapshot = course.title;
-    } else if (courseId === "corporate") {
-      courseTitleSnapshot = "Corporate Awareness Training — Security";
-    } else {
-      courseTitleSnapshot = "Індивідуальний запит";
-    }
+  // Назву курсу завжди беремо з сервера (клієнтський courseTitleSnapshot ігноруємо)
+  const content = await readSiteContent();
+  const course = content.courses.find((c) => c.id === courseId);
+  let courseTitleSnapshot: string;
+  if (course) {
+    courseTitleSnapshot = course.title;
+  } else if (courseId === "corporate") {
+    courseTitleSnapshot = "Corporate Awareness Training — Security";
+  } else {
+    courseTitleSnapshot = "Індивідуальний запит";
   }
 
   const result = await createApplication({
@@ -104,8 +102,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // --- 5. Email-сповіщення (Brevo, best-effort; можна без ключа) ---
-  void notifyApplicationByEmail(result.application);
+  // --- 5. Email (Brevo): await + короткий timeout, щоб Vercel не обірвав void ---
+  await Promise.race([
+    notifyApplicationByEmail(result.application),
+    new Promise<void>((resolve) => setTimeout(resolve, 2500)),
+  ]);
 
   return NextResponse.json({ success: true, id: result.application.id });
 }

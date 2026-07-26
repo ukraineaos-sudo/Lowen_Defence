@@ -1,6 +1,7 @@
 /**
  * lib/auth/password-store.ts — збережений хеш пароля адміна
- * Private Blob + локальний fallback; env — лише стартовий bootstrap.
+ * Private Blob + локальний fallback; env — лише bootstrap при not_found.
+ * unavailable ≠ not_found: при збої Blob не падаємо на старий env.
  */
 import { list, put } from "@vercel/blob";
 import fs from "fs";
@@ -10,23 +11,32 @@ import { dataBlobToken, runtimeEnv } from "@/lib/env";
 const HASH_PATH = "auth/admin-password-hash.txt";
 const LOCAL_HASH = path.join(process.cwd(), "data", "admin-password-hash.txt");
 
-/** 1. Читання хешу з Blob / локального файлу. */
-async function readHashFromBlob(): Promise<string | null> {
+export type PasswordReadResult =
+  | { status: "found"; hash: string }
+  | { status: "not_found" }
+  | { status: "unavailable"; error?: unknown }
+  | { status: "skipped" }; // немає Blob-токена
+
+/** 1. Читання хешу з Blob з розрізненням not_found / unavailable. */
+async function readHashFromBlob(): Promise<PasswordReadResult> {
   const token = dataBlobToken();
-  if (!token) return null;
+  if (!token) return { status: "skipped" };
   try {
     const { blobs } = await list({ prefix: HASH_PATH, token, limit: 1 });
     const match = blobs.find((b) => b.pathname === HASH_PATH) || blobs[0];
-    if (!match) return null;
+    if (!match) return { status: "not_found" };
     const res = await fetch(match.url, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      return { status: "unavailable", error: `HTTP ${res.status}` };
+    }
     const text = (await res.text()).trim();
-    return text || null;
+    if (!text) return { status: "not_found" };
+    return { status: "found", hash: text };
   } catch (err) {
     console.warn("Password hash blob read failed:", err);
-    return null;
+    return { status: "unavailable", error: err };
   }
 }
 
@@ -40,10 +50,19 @@ function readHashFromLocal(): string | null {
   }
 }
 
-/** 2. Активний хеш: store → env.ADMIN_PASSWORD_HASH. */
+/**
+ * 2. Активний хеш.
+ * Blob configured + unavailable → null (fail closed, без env).
+ * not_found / skipped → local → env bootstrap.
+ */
 export async function getActivePasswordHash(): Promise<string | null> {
   const fromBlob = await readHashFromBlob();
-  if (fromBlob) return fromBlob;
+  if (fromBlob.status === "found") return fromBlob.hash;
+  if (fromBlob.status === "unavailable") {
+    console.error("Password store unavailable — fail closed (env bootstrap skipped)");
+    return null;
+  }
+
   const fromLocal = readHashFromLocal();
   if (fromLocal) return fromLocal;
   return runtimeEnv("ADMIN_PASSWORD_HASH") || null;
@@ -84,7 +103,18 @@ export async function writePasswordHash(
     /* serverless may be read-only */
   }
 
-  if (!blobOk && !localOk) {
+  // Якщо Data Blob налаштований — успіх лише після запису в Blob
+  if (token) {
+    if (!blobOk) {
+      return {
+        success: false,
+        error: "Не вдалося зберегти пароль у Blob. Спробуйте пізніше.",
+      };
+    }
+    return { success: true };
+  }
+
+  if (!localOk) {
     return { success: false, error: "Сховище ще не налаштовано" };
   }
   return { success: true };
