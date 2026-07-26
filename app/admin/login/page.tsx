@@ -9,13 +9,15 @@ function LoginInner() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/admin";
   const sessionExpired = searchParams.get("reason") === "session_expired";
+  const destination = next.startsWith("/admin") ? next : "/admin";
 
   return (
     <AdminLogin
       sessionExpired={sessionExpired}
       onSuccess={() => {
-        router.replace(next.startsWith("/admin") ? next : "/admin");
-        router.refresh();
+        // Hard navigation: soft router.replace+refresh races with RSC cache
+        // that still remembers the pre-login middleware redirect to /login.
+        window.location.assign(destination);
       }}
       onClose={() => router.push("/")}
     />
