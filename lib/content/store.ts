@@ -40,6 +40,17 @@ const LOCAL_HISTORY = path.join(LOCAL_DATA, "history");
 
 const CONFLICT_MSG = "Контент уже був змінений в іншій вкладці.";
 
+/**
+ * Blob get() інколи повертає weak ETag (`W/"…"`), а put(ifMatch) очікує strong (`"…"`).
+ * Без нормалізації soft-check проходить, але conditional write завжди дає 412 → CONTENT_CONFLICT.
+ */
+export function normalizeBlobEtag(
+  etag: string | null | undefined
+): string | null {
+  if (etag == null || etag === "") return null;
+  return etag.startsWith("W/") ? etag.slice(2) : etag;
+}
+
 function isPreconditionFailed(err: unknown): boolean {
   if (err instanceof BlobPreconditionFailedError) return true;
   return (
@@ -126,7 +137,7 @@ export async function readFromBlob(): Promise<ContentReadResult> {
     return {
       status: "found",
       content: validated.content,
-      revision: result.blob.etag,
+      revision: normalizeBlobEtag(result.blob.etag) ?? result.blob.etag,
       source: "blob",
     };
   } catch (err) {
@@ -427,11 +438,10 @@ export async function writeSiteContent(
         };
       }
 
+      const expected = normalizeBlobEtag(expectedRevision);
+
       if (previous.status === "found") {
-        if (
-          expectedRevision === null ||
-          expectedRevision !== previous.revision
-        ) {
+        if (expected === null || expected !== previous.revision) {
           return {
             success: false,
             code: "CONTENT_CONFLICT",
@@ -451,10 +461,13 @@ export async function writeSiteContent(
               addRandomSuffix: false,
               contentType: "application/json",
               allowOverwrite: true,
-              ifMatch: expectedRevision,
+              ifMatch: expected,
             }
           );
-          return finalizeMarkerAfterWrite(next, written.etag);
+          return finalizeMarkerAfterWrite(
+            next,
+            normalizeBlobEtag(written.etag) ?? written.etag
+          );
         } catch (err) {
           if (isPreconditionFailed(err)) {
             return {
@@ -468,7 +481,7 @@ export async function writeSiteContent(
       }
 
       // current not_found — перший Save лише з expectedRevision = null
-      if (expectedRevision !== null) {
+      if (expected !== null) {
         return {
           success: false,
           code: "CONTENT_CONFLICT",
@@ -488,7 +501,10 @@ export async function writeSiteContent(
             // без allowOverwrite: друга вкладка не перезапише створений об'єкт
           }
         );
-        return finalizeMarkerAfterWrite(next, written.etag);
+        return finalizeMarkerAfterWrite(
+          next,
+          normalizeBlobEtag(written.etag) ?? written.etag
+        );
       } catch (err) {
         if (isPreconditionFailed(err)) {
           return {

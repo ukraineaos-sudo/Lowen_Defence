@@ -65,6 +65,46 @@ describe("content OCC (Blob)", () => {
     }
   });
 
+  it("weak get ETag W/\"…\" is normalized for read and ifMatch", async () => {
+    getMock.mockResolvedValueOnce(
+      blobGetOk(defaultSiteContent, 'W/"etag-v10"')
+    );
+    putMock
+      .mockResolvedValueOnce({ etag: '"hist"' })
+      .mockResolvedValueOnce({ etag: 'W/"etag-v11"' })
+      .mockResolvedValueOnce({ etag: '"state"' });
+    listMock
+      .mockResolvedValueOnce({ blobs: [] })
+      .mockResolvedValueOnce({ blobs: [] });
+
+    const { readFromBlob, writeSiteContent, normalizeBlobEtag } = await import(
+      "@/lib/content/store"
+    );
+    expect(normalizeBlobEtag('W/"etag-v10"')).toBe('"etag-v10"');
+
+    const read = await readFromBlob();
+    expect(read.status).toBe("found");
+    if (read.status === "found") {
+      expect(read.revision).toBe('"etag-v10"');
+    }
+
+    // Client may still send weak form from an older page load — server normalizes
+    getMock.mockResolvedValueOnce(
+      blobGetOk(defaultSiteContent, 'W/"etag-v10"')
+    );
+    const result = await writeSiteContent(defaultSiteContent, 'W/"etag-v10"');
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.revision).toBe('"etag-v11"');
+    }
+    const currentPut = putMock.mock.calls.find(
+      (c) => c[0] === "content/current/site-content.json"
+    );
+    expect(currentPut![2]).toMatchObject({
+      ifMatch: '"etag-v10"',
+    });
+  });
+
   it("Save with current ETag calls put with ifMatch and returns new ETag", async () => {
     getMock.mockResolvedValueOnce(blobGetOk(defaultSiteContent, '"etag-v10"'));
     putMock
