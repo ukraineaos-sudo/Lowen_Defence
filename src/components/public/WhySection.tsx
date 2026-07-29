@@ -43,10 +43,10 @@ export const WhySection: React.FC = () => {
           <div className="why-image">
             <ResponsiveImage
               image={{
-                url: "/why/why-practice.png",
-                alt: "Практичне заняття для дітей",
-                focalX: 50,
-                focalY: 50,
+                  url: "/why/why-practice.jpg",
+                  alt: "Практичне заняття для дітей",
+                  focalX: 50,
+                  focalY: 50,
               }}
             />
             <div className="why-quote">
