@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
   if (course) {
     courseTitleSnapshot = course.title;
   } else if (courseId === "corporate") {
-    courseTitleSnapshot = "Corporate Awareness Training — Security";
+    courseTitleSnapshot = "Корпоративний тренінг «Безпекова обізнаність»";
   } else {
     courseTitleSnapshot = "Індивідуальний запит";
   }

@@ -87,7 +87,7 @@ export const TeamEditor: React.FC<TeamEditorProps> = ({
             className="btn btn-primary text-xs py-1.5 px-3 flex items-center gap-1"
           >
             <Plus className="w-4 h-4" />
-            <span>Додати тренера</span>
+            <span>Додати до команди</span>
           </button>
         </div>
 

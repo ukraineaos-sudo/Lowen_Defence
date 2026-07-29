@@ -23,7 +23,7 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
   if (!image || !image.url || hasError) {
     return (
       <div
-        className={`w-full h-full bg-[#0d3f2c] text-[#ffd51f] flex flex-col items-center justify-center p-4 text-center select-none ${className}`}
+        className={`w-full h-full bg-[#0d3f2c] text-white flex flex-col items-center justify-center p-4 text-center select-none ${className}`}
         style={{ aspectRatio }}
       >
         <ShieldAlert className="w-10 h-10 mb-2 opacity-80" />

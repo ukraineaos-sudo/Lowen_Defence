@@ -34,8 +34,8 @@ export const CoursesSection: React.FC<CoursesSectionProps> = ({
         </div>
 
         <div className="course-grid">
-          {activeCourses.map((course, index) => {
-            const isFeatured = course.featured || index === 0;
+          {activeCourses.map((course) => {
+            const isFeatured = course.featured;
 
             return (
               <article
@@ -68,7 +68,7 @@ export const CoursesSection: React.FC<CoursesSectionProps> = ({
 
                   <div className="price">
                     <div>
-                      <strong className={isFeatured ? "text-[#ffd51f]" : "text-[#082d20]"}>
+                      <strong className={isFeatured ? "text-white" : "text-[#082d20]"}>
                         {course.price}
                       </strong>
                       {course.priceNote && (

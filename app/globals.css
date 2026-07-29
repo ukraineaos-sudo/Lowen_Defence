@@ -9,9 +9,13 @@
   --green-900: #0d3f2c;
   --green-800: #13563a;
   --green-700: #1b7048;
-  --green-500: #28aa5b;
+  /* Pantone 354 / CMYK 80,0,90,0 / RGB 4,166,75 — brand green (variant 4) */
+  --green-500: #04a64b;
+  --surface-dark: #04a64b;
+  --surface-light: #f7faf8;
   --lime: #b9ee57;
-  --yellow: #ffd51f;
+  /* --yellow removed from public accents (v4): white + dark green only */
+  --yellow: #ffd51f; /* reserved; not used on public landing in v4 */
   --cream: #f7f3e9;
   --white: #ffffff;
   --ink: #13241c;
@@ -85,16 +89,22 @@ button, input, textarea, select {
   width: 26px;
   height: 4px;
   border-radius: 4px;
-  background: var(--yellow);
+  background: var(--green-950);
 }
 
-/* Header */
+.hero .eyebrow::before,
+.business .eyebrow::before,
+#contact .eyebrow::before {
+  background: var(--white);
+}
+
+/* Header — variant 4: Pantone 354 surface */
 .site-header {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--green-950);
-  border-bottom: 1px solid rgba(40, 170, 91, 0.25);
+  background: var(--surface-dark);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(12px);
 }
 
@@ -112,19 +122,27 @@ button, input, textarea, select {
   text-decoration: none;
 }
 
-/* Logo mark: current PNG on brand yellow — high contrast in dark header */
+/* Logo mark: white plate (v2/v3; v1 was yellow) */
 .brand-mark {
   width: 60px;
   height: 60px;
   flex-shrink: 0;
   border-radius: 16px;
-  border: 1.5px solid rgba(8, 45, 32, 0.35);
-  background: var(--yellow);
-  box-shadow: 0 8px 20px rgba(255, 213, 31, 0.22);
+  border: 1.5px solid rgba(8, 45, 32, 0.1);
+  background: var(--white);
+  box-shadow: 0 6px 18px rgba(8, 45, 32, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+}
+
+.brand-title {
+  color: #ffffff;
+}
+
+.brand-tagline {
+  color: rgba(232, 243, 237, 0.92);
 }
 
 @media (min-width: 768px) {
@@ -139,7 +157,7 @@ button, input, textarea, select {
   width: 52px;
   height: 52px;
   border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(255, 213, 31, 0.12);
+  box-shadow: 0 4px 12px rgba(8, 45, 32, 0.1);
 }
 
 .brand-mark-img {
@@ -159,7 +177,7 @@ button, input, textarea, select {
   gap: 28px;
   font-weight: 700;
   font-size: 0.95rem;
-  color: #e1ebd2;
+  color: #e8f3ed;
 }
 
 .nav-links a {
@@ -167,7 +185,7 @@ button, input, textarea, select {
 }
 
 .nav-links a:hover {
-  color: var(--yellow);
+  color: var(--white);
 }
 
 .menu-btn {
@@ -190,18 +208,23 @@ button, input, textarea, select {
 .admin-link {
   margin-left: 8px;
   padding-left: 18px;
-  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  border-left: 1px solid rgba(255, 255, 255, 0.22);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(169, 205, 184, 0.85);
+  color: rgba(232, 243, 237, 0.85);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .admin-link:hover {
   color: #fff;
+}
+
+/* У бургер-меню за замовчуванням приховано (десктоп показує header-варіант) */
+.admin-link--menu {
+  display: none;
 }
 
 @media (max-width: 991px) {
@@ -211,11 +234,11 @@ button, input, textarea, select {
     top: 80px;
     left: 0;
     right: 0;
-    background: var(--green-950);
+    background: var(--surface-dark);
     flex-direction: column;
     padding: 24px;
-    border-bottom: 1px solid var(--green-800);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.22);
     gap: 18px;
   }
 
@@ -227,6 +250,21 @@ button, input, textarea, select {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  /* На мобільному Admin лише в меню, не в шапці */
+  .admin-link--header {
+    display: none;
+  }
+
+  .admin-link--menu {
+    display: block;
+    margin: 8px 0 0;
+    padding: 16px 0 0;
+    border-left: none;
+    border-top: 1px solid #a9cdb8;
+    font-size: 0.8rem;
+    color: rgba(232, 243, 237, 0.9);
   }
 }
 
@@ -251,15 +289,29 @@ button, input, textarea, select {
 }
 
 .btn-primary {
-  background: var(--yellow);
+  background: var(--white);
   color: var(--green-950);
-  box-shadow: 0 12px 32px rgba(255, 213, 31, 0.25);
+  box-shadow: 0 12px 32px rgba(8, 45, 32, 0.14);
+  border-color: rgba(8, 45, 32, 0.08);
 }
 
 .btn-primary:hover {
-  background: #fcd000;
+  background: #f3f7f4;
 }
 
+/* Primary on light form — dark-green insert */
+.contact-form .btn-primary {
+  background: var(--green-950);
+  color: var(--white);
+  box-shadow: 0 12px 32px rgba(8, 45, 32, 0.2);
+  border-color: transparent;
+}
+
+.contact-form .btn-primary:hover {
+  background: var(--green-900);
+}
+
+/* Secondary on dark sections (hero/business/contact) */
 .btn-secondary {
   border-color: rgba(255, 255, 255, 0.42);
   color: white;
@@ -280,16 +332,39 @@ button, input, textarea, select {
   background: var(--green-900);
 }
 
-/* Hero Section */
+/* Hero — variant 4: Pantone 354 + soft mesh */
 .hero {
   position: relative;
-  background: var(--green-950);
+  background: var(--surface-dark);
   color: white;
-  padding: 90px 0 80px 0;
+  padding: 90px 0 100px 0;
   overflow: hidden;
-  background-image: 
-    radial-gradient(circle at 80% 20%, rgba(19, 86, 58, 0.45) 0%, transparent 60%),
-    linear-gradient(135deg, rgba(8, 45, 32, 0.98) 0%, rgba(13, 63, 44, 0.92) 100%);
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.16) 0%, transparent 42%),
+    radial-gradient(circle at 82% 18%, rgba(8, 45, 32, 0.22) 0%, transparent 50%),
+    radial-gradient(circle at 72% 78%, rgba(247, 243, 233, 0.18) 0%, transparent 46%),
+    radial-gradient(circle at 30% 88%, rgba(3, 138, 63, 0.35) 0%, transparent 40%),
+    linear-gradient(165deg, #04a64b 0%, #038a3f 52%, #04a64b 100%);
+}
+
+/* Soft mesh fade у «підвалі» зелёных секций → следующий блок */
+.hero::after,
+.business::after,
+#contact::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 180px;
+  pointer-events: none;
+  z-index: 2;
+  background:
+    radial-gradient(ellipse 85% 120% at 15% 100%, rgba(247, 243, 233, 0.75) 0%, transparent 68%),
+    radial-gradient(ellipse 75% 110% at 85% 100%, rgba(255, 255, 255, 0.6) 0%, transparent 62%),
+    radial-gradient(ellipse 50% 80% at 50% 100%, rgba(232, 243, 237, 0.5) 0%, transparent 70%),
+    linear-gradient(to bottom, transparent 10%, rgba(247, 243, 233, 0.45) 100%);
+  filter: blur(3px);
 }
 
 .hero-grid {
@@ -311,17 +386,18 @@ button, input, textarea, select {
   line-height: 1.12;
   letter-spacing: -0.02em;
   margin: 20px 0;
+  color: #ffffff;
 }
 
 .hero-copy h1 span {
-  color: var(--yellow);
+  color: var(--white);
   position: relative;
   display: inline-block;
 }
 
 .lead {
   font-size: 1.15rem;
-  color: #cbe0d3;
+  color: #e8f3ed;
   max-width: 620px;
   margin-bottom: 32px;
   line-height: 1.6;
@@ -353,18 +429,37 @@ button, input, textarea, select {
   border-top: 1px solid var(--line);
 }
 
-/* Trust Strip */
+/* Trust Strip — soft mini-cards (v4: white + dark green, no yellow) */
 .trust-strip {
-  background: var(--yellow);
+  position: relative;
+  z-index: 1;
+  background: var(--white);
   color: var(--green-950);
-  padding: 22px 0;
+  padding: 28px 0;
   font-weight: 800;
+  isolation: isolate;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+/* Soft white bleed top/bottom */
+.trust-strip::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -6px;
+  bottom: -6px;
+  background: var(--white);
+  filter: blur(3px);
+  z-index: -1;
+  pointer-events: none;
 }
 
 .trust-items {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px 24px;
+  gap: 12px;
   text-align: center;
   font-size: 0.95rem;
 }
@@ -372,13 +467,112 @@ button, input, textarea, select {
 @media (min-width: 768px) {
   .trust-items {
     grid-template-columns: repeat(4, 1fr);
-    font-size: 1.05rem;
+    gap: 14px;
+    font-size: 1.1rem;
   }
+}
+
+.trust-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #f8faf8;
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 10px rgba(8, 45, 32, 0.03);
+  color: var(--green-950);
+  line-height: 1.3;
 }
 
 /* Section Headings */
 section {
   padding: 88px 0;
+}
+
+/* Колірні переходи між сусідніми секціями. */
+#why,
+.courses,
+#approach,
+.standards-section,
+.team,
+#faq,
+footer {
+  position: relative;
+  overflow: hidden;
+}
+
+#why > .container,
+.courses > .container,
+#approach > .container,
+.standards-section > .container,
+.team > .container,
+#faq > .container {
+  position: relative;
+  z-index: 3;
+}
+
+#why,
+.courses,
+#approach,
+.standards-section,
+.team,
+#faq {
+  padding-bottom: 112px;
+}
+
+#why::after,
+.courses::after,
+#approach::after,
+.standards-section::after,
+.team::after,
+#faq::after,
+footer::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+/* White → cream */
+#why::after,
+.standards-section::after {
+  bottom: 0;
+  height: 168px;
+  z-index: 2;
+  background:
+    radial-gradient(ellipse 90% 120% at 18% 100%, rgba(247, 243, 233, 0.9) 0%, transparent 66%),
+    radial-gradient(ellipse 80% 110% at 82% 100%, rgba(232, 243, 237, 0.58) 0%, transparent 62%),
+    linear-gradient(to bottom, transparent 8%, rgba(247, 243, 233, 0.52) 100%);
+  filter: blur(3px);
+}
+
+/* Cream → white */
+.courses::after,
+.team::after {
+  bottom: 0;
+  height: 168px;
+  z-index: 2;
+  background:
+    radial-gradient(ellipse 90% 120% at 20% 100%, rgba(255, 255, 255, 0.92) 0%, transparent 66%),
+    radial-gradient(ellipse 76% 108% at 80% 100%, rgba(248, 250, 248, 0.7) 0%, transparent 60%),
+    linear-gradient(to bottom, transparent 8%, rgba(255, 255, 255, 0.55) 100%);
+  filter: blur(3px);
+}
+
+/* White → dark green */
+#approach::after,
+#faq::after {
+  bottom: 0;
+  height: 180px;
+  z-index: 2;
+  background:
+    radial-gradient(ellipse 88% 120% at 18% 100%, rgba(4, 166, 75, 0.4) 0%, transparent 66%),
+    radial-gradient(ellipse 76% 108% at 82% 100%, rgba(3, 138, 63, 0.28) 0%, transparent 62%),
+    linear-gradient(to bottom, transparent 8%, rgba(4, 166, 75, 0.5) 100%);
+  filter: blur(3px);
 }
 
 .section-head {
@@ -563,6 +757,17 @@ h2 {
   border-color: var(--green-800);
 }
 
+/* Featured card: white CTA on dark-green body (contrast, no extra colors) */
+.course-card.featured .btn-primary {
+  background: var(--white);
+  color: var(--green-950);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.course-card.featured .btn-primary:hover {
+  background: #f3f7f4;
+}
+
 .course-card.featured h3 {
   color: white;
 }
@@ -593,8 +798,8 @@ h2 {
   position: absolute;
   top: 16px;
   left: 16px;
-  background: var(--yellow);
-  color: var(--green-950);
+  background: var(--green-950);
+  color: var(--white);
   font-weight: 800;
   font-size: 0.75rem;
   padding: 6px 14px;
@@ -629,7 +834,7 @@ h2 {
 
 .course-card.featured .meta span {
   background: var(--green-900);
-  color: var(--yellow);
+  color: var(--white);
 }
 
 .price {
@@ -655,7 +860,7 @@ h2 {
 }
 
 .course-card.featured .price strong {
-  color: var(--yellow);
+  color: var(--white);
 }
 
 .price small {
@@ -670,8 +875,8 @@ h2 {
 
 .discount-note {
   margin-top: 48px;
-  background: #fff8d6;
-  border: 1px solid var(--yellow);
+  background: #e8f3ed;
+  border: 1px solid var(--green-800);
   padding: 20px 28px;
   border-radius: 20px;
   color: var(--green-950);
@@ -705,7 +910,7 @@ h2 {
   bottom: 20px;
   left: 20px;
   right: 20px;
-  background: var(--yellow);
+  background: var(--white);
   color: var(--green-950);
   padding: 18px 22px;
   border-radius: 20px;
@@ -748,8 +953,11 @@ h2 {
 
 /* Business Section */
 .business {
-  background: var(--green-950);
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-dark);
   color: white;
+  padding-bottom: 100px;
 }
 
 .business h2 {
@@ -761,6 +969,8 @@ h2 {
 }
 
 .business-grid {
+  position: relative;
+  z-index: 3;
   display: grid;
   grid-template-columns: 1fr;
   gap: 48px;
@@ -952,9 +1162,11 @@ h2 {
 
 /* Contact Section */
 #contact {
-  background: var(--green-950);
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-dark);
   color: white;
-  padding: 96px 0;
+  padding: 96px 0 120px;
 }
 
 #contact h2 {
@@ -962,6 +1174,8 @@ h2 {
 }
 
 .contact-wrap {
+  position: relative;
+  z-index: 3;
   display: grid;
   grid-template-columns: 1fr;
   gap: 48px;
@@ -1064,6 +1278,7 @@ h2 {
 
 /* Footer */
 footer {
+  position: relative;
   background: #051f16;
   color: #a9cdb8;
   padding: 48px 0;
@@ -1071,11 +1286,22 @@ footer {
 }
 
 .footer-grid {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 24px;
   align-items: center;
   text-align: center;
+}
+
+/* Contact dark green → darker footer green */
+footer::before {
+  top: -28px;
+  height: 64px;
+  z-index: 1;
+  background: linear-gradient(to bottom, rgba(4, 166, 75, 0.42) 0%, rgba(5, 31, 22, 0.82) 100%);
+  filter: blur(3px);
 }
 
 @media (min-width: 768px) {

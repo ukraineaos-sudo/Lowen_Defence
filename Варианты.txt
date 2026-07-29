@@ -1,0 +1,65 @@
+﻿Варианты темы публичного сайта Löwen Defence® Україна
+======================================================
+Файл для сравнения скринов клиенту. Можно откатить к любому варианту по описанию.
+
+────────────────────────────────────────────────────
+ВАРИАНТ 1 — тёмно-зелёный #082d20 + жёлтый акцент
+Дата: 2026-07-28
+Статус: исходный продакшен / «куда вернуться»
+
+  Header/Hero/Business/Contact: #082d20
+  CTA / trust / accents: #ffd51f
+  Жёлтые полосы в Hero, жёлтый logo plate
+
+────────────────────────────────────────────────────
+ВАРИАНТ 2 — mid-green #3c8f6e + жёлтый + mesh
+Дата: 2026-07-28
+Статус: эксперимент (обсуждался)
+
+  --surface-dark: #3c8f6e
+  Белый logo, без полос, mesh blur, жёлтый CTA
+
+────────────────────────────────────────────────────
+ВАРИАНТ 3 — светлый «немецкий» верх
+Дата: 2026-07-28
+Статус: эксперимент
+
+  Header+Hero светлые; business/contact #3c8f6e
+  Жёлтый в основном у CTA
+
+────────────────────────────────────────────────────
+ВАРИАНТ 4 — Pantone 354 + белый + тёмно-зелёный (БЕЗ жёлтого)
+Дата: 2026-07-29
+Статус: сейчас в коде (по замечанию клиента)
+
+ИСТОЧНИК ЗЕЛЁНОГО (президент)
+  CMYK 80,0,90,0 · RGB 4,166,75 · Hex #04A64B · Pantone 354
+
+ПАЛИТРА ПУБЛИЧКИ (клиент)
+  • Pantone 354 (#04a64b) — header / hero / business / contact
+  • Белый — комплемент: CTA на зелёном, trust-strip, hero span, method-badge,
+    nav hover, иконки на тёмных секциях
+  • Тёмно-зелёный (#082d20 / #0d3f2c) — вставки: CTA на светлых формах,
+    course tags, featured meta, eyebrow на светлых блоках, текст
+  • Жёлтый (#ffd51f) — УБРАН с публичного лендинга
+  • Mesh-переходы: blur ~3px
+  • Админка может ещё использовать жёлтый (вне scope отзыва)
+
+КОНТЕНТ
+  Corporate Awareness Training — Security
+  → Корпоративний тренінг «Безпекова обізнаність»
+  (BusinessSection, ContactSection select, applications snapshot)
+
+ФАЙЛЫ
+  app/globals.css
+  src/components/public/BusinessSection.tsx
+  src/components/public/ContactSection.tsx
+  src/components/public/Footer.tsx
+  src/components/public/CoursesSection.tsx
+  src/components/public/PrivacyModal.tsx
+  src/components/public/ResponsiveImage.tsx
+  app/api/applications/route.ts
+  Варианты.txt
+
+ОТКАТ К «жёлтому v4» (до правки клиента)
+  Вернуть var(--yellow) на btn-primary, trust-strip, tags, hero span и т.д.

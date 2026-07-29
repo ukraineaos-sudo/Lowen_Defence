@@ -25,7 +25,7 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({
       <div className="relative w-full max-w-2xl max-h-[85vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-[#dbe5dd]">
         <div className="px-6 py-5 bg-[#082d20] text-white flex items-center justify-between border-b border-[#13563a] shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            <ShieldCheck className="w-6 h-6 text-[#ffd51f] shrink-0" />
+            <ShieldCheck className="w-6 h-6 text-[#082d20] shrink-0" />
             <h3 className="text-lg font-black tracking-wide text-white m-0 truncate">
               Політика конфіденційності
             </h3>

@@ -28,7 +28,7 @@ export const StandardsSection: React.FC = () => {
   ];
 
   return (
-    <section>
+    <section className="standards-section">
       <div className="container">
         <div className="section-head">
           <div>

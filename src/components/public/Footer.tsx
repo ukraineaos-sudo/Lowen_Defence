@@ -30,7 +30,7 @@ export const Footer: React.FC<FooterProps> = ({ contacts, onOpenPrivacy }) => {
                 if (fallback) fallback.style.display = "flex";
               }}
             />
-            <div className="logo-fallback hidden items-center justify-center w-full h-full text-[#ffd51f]">
+            <div className="logo-fallback hidden items-center justify-center w-full h-full text-[#04a64b]">
               <Shield className="w-6 h-6 stroke-[2.5]" />
             </div>
           </div>
@@ -45,14 +45,14 @@ export const Footer: React.FC<FooterProps> = ({ contacts, onOpenPrivacy }) => {
             href={contacts.germanWebsiteUrl || "https://www.loewen-defence.de"}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 hover:text-[#ffd51f]"
+            className="flex items-center gap-1.5 hover:text-white"
           >
             <span>Німецький сайт</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
           <button
             onClick={onOpenPrivacy}
-            className="hover:text-[#ffd51f] text-left"
+            className="hover:text-white text-left"
           >
             Політика конфіденційності
           </button>

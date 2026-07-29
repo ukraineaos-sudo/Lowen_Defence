@@ -60,15 +60,15 @@ export const Header: React.FC<HeaderProps> = ({
                 if (fallback) fallback.style.display = "flex";
               }}
             />
-            <div className="logo-fallback hidden items-center justify-center w-full h-full text-[#ffd51f]">
+            <div className="logo-fallback hidden items-center justify-center w-full h-full text-[#04a64b]">
               <Shield className="w-7 h-7 stroke-[2.5]" />
             </div>
           </div>
           <div>
-            <span className="text-lg font-black tracking-tight block text-white leading-none">
+            <span className="brand-title text-lg font-black tracking-tight block leading-none">
               Löwen Defence®
             </span>
-            <small className="block color-[#a9cdb8] text-[#a9cdb8] font-extrabold text-[0.68rem] tracking-widest uppercase mt-1">
+            <small className="brand-tagline block font-extrabold text-[0.68rem] tracking-widest uppercase mt-1">
               Україна · Захист Лева
             </small>
           </div>
@@ -104,11 +104,21 @@ export const Header: React.FC<HeaderProps> = ({
           <a href="#contact" onClick={() => handleNavClick("#contact")}>
             Контакти
           </a>
+          {showAdminLink && (
+            <Link
+              href="/admin"
+              className="admin-link admin-link--menu"
+              title="Адмін-панель"
+              onClick={() => setMenuOpen(false)}
+            >
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="admin-link-wrap">
           {showAdminLink && (
-            <Link href="/admin" className="admin-link" title="Адмін-панель">
+            <Link href="/admin" className="admin-link admin-link--header" title="Адмін-панель">
               Admin
             </Link>
           )}

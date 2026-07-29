@@ -103,21 +103,21 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
           </p>
 
           <div className="contact-details">
-            <a href={contacts.phoneHref} className="flex items-center gap-3 hover:text-[#ffd51f] transition-colors">
-              <Phone className="w-5 h-5 text-[#ffd51f]" />
+            <a href={contacts.phoneHref} className="flex items-center gap-3 hover:text-white transition-colors">
+              <Phone className="w-5 h-5 text-white" />
               <span>{contacts.phoneDisplay}</span>
             </a>
-            <a href={`mailto:${contacts.email}`} className="flex items-center gap-3 hover:text-[#ffd51f] transition-colors">
-              <Mail className="w-5 h-5 text-[#ffd51f]" />
+            <a href={`mailto:${contacts.email}`} className="flex items-center gap-3 hover:text-white transition-colors">
+              <Mail className="w-5 h-5 text-white" />
               <span>{contacts.email}</span>
             </a>
             <a
               href={contacts.websiteUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 hover:text-[#ffd51f] transition-colors"
+              className="flex items-center gap-3 hover:text-white transition-colors"
             >
-              <Globe className="w-5 h-5 text-[#ffd51f]" />
+              <Globe className="w-5 h-5 text-white" />
               <span>{contacts.websiteDisplay}</span>
             </a>
           </div>
@@ -206,7 +206,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     </option>
                   ))}
                   <option value="corporate">
-                    Corporate Awareness Training — Security (для компаній)
+                    Корпоративний тренінг «Безпекова обізнаність» (для компаній)
                   </option>
                   <option value="custom">Індивідуальний запит / Консультація</option>
                 </select>

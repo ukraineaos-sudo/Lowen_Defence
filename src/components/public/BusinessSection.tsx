@@ -14,19 +14,19 @@ export const BusinessSection: React.FC<BusinessSectionProps> = ({
 }) => {
   const blocks = [
     {
-      icon: <MessageSquare className="w-5 h-5 text-[#ffd51f] mb-2" />,
+      icon: <MessageSquare className="w-5 h-5 text-white mb-2" />,
       title: "Розмова з агресивним співрозмовником",
     },
     {
-      icon: <ShieldCheck className="w-5 h-5 text-[#ffd51f] mb-2" />,
+      icon: <ShieldCheck className="w-5 h-5 text-white mb-2" />,
       title: "Деескалація замість конфронтації",
     },
     {
-      icon: <Flame className="w-5 h-5 text-[#ffd51f] mb-2" />,
+      icon: <Flame className="w-5 h-5 text-white mb-2" />,
       title: "Дії при погрозі або нападі",
     },
     {
-      icon: <Building2 className="w-5 h-5 text-[#ffd51f] mb-2" />,
+      icon: <Building2 className="w-5 h-5 text-white mb-2" />,
       title: "Практичні сценарії для вашої організації",
     },
   ];
@@ -38,7 +38,7 @@ export const BusinessSection: React.FC<BusinessSectionProps> = ({
           <span className="eyebrow" style={{ color: "#d2e6d8" }}>
             Для бізнесу та організацій
           </span>
-          <h2>Corporate Awareness Training — Security</h2>
+          <h2>Корпоративний тренінг «Безпекова обізнаність»</h2>
           <p className="section-lead">
             Працівники, які контактують з клієнтами та відвідувачами, можуть
             стикатися з образами, погрозами, агресією або нападом. Навчання поєднує

@@ -12,25 +12,9 @@ export const Hero: React.FC = () => {
 
   return (
     <section className="hero relative overflow-hidden" id="top">
-      {/* 3 Yellow diagonal decorative stripes behind shield (slanted bottom-left to top-right).
-          Mobile (<992px): clip to right corridor so copy/CTA stay on green. Desktop unchanged. */}
-      <div className="absolute right-0 top-0 bottom-0 w-full max-w-[700px] pointer-events-none z-0 overflow-hidden max-[991px]:w-[34%] max-[991px]:max-w-none">
-        <div 
-          className="absolute right-[10%] top-1/2 -translate-y-1/2 flex gap-7 sm:gap-10 max-[991px]:right-[-18%] max-[991px]:gap-5"
-          style={{ 
-            transform: "rotate(35deg)", 
-            transformOrigin: "center center" 
-          }}
-        >
-          <div className="w-12 sm:w-16 h-[1200px] bg-[#ffd51f] max-[991px]:w-10" />
-          <div className="w-12 sm:w-16 h-[1200px] bg-[#ffd51f] max-[991px]:w-10" />
-          <div className="w-12 sm:w-16 h-[1200px] bg-[#ffd51f] max-[991px]:w-10" />
-        </div>
-      </div>
-
       <div className="container hero-grid relative z-10">
         <div className="hero-copy">
-          <span className="eyebrow" style={{ color: "#a9cdb8" }}>
+          <span className="eyebrow" style={{ color: "#e8f3ed" }}>
             Німецька методика · українська команда
           </span>
           <h1>
@@ -57,7 +41,7 @@ export const Hero: React.FC = () => {
           </div>
         </div>
 
-        <div className="relative w-full max-w-[480px] mx-auto min-h-[530px] flex flex-col justify-between p-7 sm:p-9 text-center filter drop-shadow-[0_22px_40px_rgba(0,0,0,0.4)]" aria-label="Коротко про програму">
+        <div className="relative w-full max-w-[480px] mx-auto min-h-[530px] flex flex-col justify-between p-7 sm:p-9 text-center filter drop-shadow-[0_22px_40px_rgba(0,0,0,0.28)]" aria-label="Коротко про програму">
           {/* SVG Shield Frame (English Shield / English écu with wider bottom) */}
           <svg 
             className="absolute inset-0 w-full h-full text-white pointer-events-none" 
@@ -77,7 +61,7 @@ export const Hero: React.FC = () => {
             <path 
               d="M 200,42 C 255,24 318,24 370,36 C 374,180 366,298 320,380 C 274,450 226,470 200,474 C 174,470 126,450 80,380 C 34,298 26,180 30,36 C 82,24 145,24 200,42 Z" 
               fill="none" 
-              stroke="#28aa5b" 
+              stroke="#04a64b" 
               strokeWidth="3.5" 
               strokeLinejoin="round"
               opacity="0.9"
@@ -88,12 +72,12 @@ export const Hero: React.FC = () => {
           <div className="relative z-10 pt-5 px-3.5 sm:px-4 flex flex-col h-full">
             {/* Top Row: Left (Group size) & Right (Practice) with enlarged text and adjusted margins */}
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5 text-center pb-4 mb-2 border-b border-[#082d20]/12">
-              <div className="-ml-3 flex flex-col justify-center items-center bg-[#f0f7f3] p-3 sm:p-3.5 rounded-2xl border border-[#28aa5b]/35 shadow-xs">
+              <div className="-ml-3 flex flex-col justify-center items-center bg-[#f0f7f3] p-3 sm:p-3.5 rounded-2xl border border-[#04a64b]/35 shadow-xs">
                 <b className="text-[19px] w-[125px] font-black text-[#082d20] block leading-tight">До 14 осіб</b>
                 <span className="text-[17px] w-[125px] text-[#46574c] font-semibold leading-tight block mt-1">у групі</span>
               </div>
 
-              <div className="-mr-3 flex flex-col justify-center items-center bg-[#f0f7f3] p-3 sm:p-3.5 rounded-2xl border border-[#28aa5b]/35 shadow-xs">
+              <div className="-mr-3 flex flex-col justify-center items-center bg-[#f0f7f3] p-3 sm:p-3.5 rounded-2xl border border-[#04a64b]/35 shadow-xs">
                 <b className="text-[19px] w-[125px] font-black text-[#082d20] block leading-tight">Практика</b>
                 <span className="text-[16px] w-[125px] text-[#46574c] font-semibold leading-tight block mt-1">сценарії й вправи</span>
               </div>

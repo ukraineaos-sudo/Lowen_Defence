@@ -16,8 +16,8 @@ export const TrustStrip: React.FC = () => {
     <div className="trust-strip">
       <div className="container trust-items">
         {items.map((item, index) => (
-          <div key={index} className="flex items-center justify-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-[#082d20] stroke-[2.5] shrink-0" />
+          <div key={index} className="trust-item">
+            <CheckCircle2 className="w-5 h-5 text-[#082d20] stroke-[2.5] shrink-0" aria-hidden />
             <span>{item}</span>
           </div>
         ))}
