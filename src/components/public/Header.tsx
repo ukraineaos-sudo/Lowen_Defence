@@ -49,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <div className="brand-mark">
             <img
-              src="/logo/logo.png"
+              src="/logo/logo-mark.png"
               alt="Löwen Defence®"
               className="brand-mark-img"
               onError={(e) => {
@@ -69,7 +69,7 @@ export const Header: React.FC<HeaderProps> = ({
               Löwen Defence®
             </span>
             <small className="brand-tagline block font-extrabold text-[0.68rem] tracking-widest uppercase mt-1">
-              Україна · Захист Лева
+              Захист Лева · Україна
             </small>
           </div>
         </a>

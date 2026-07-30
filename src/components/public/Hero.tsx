@@ -2,7 +2,7 @@
  * Hero.tsx — головний екран лендингу
  */
 import React from "react";
-import { ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export const Hero: React.FC = () => {
   const handleScroll = (id: string) => {
@@ -41,61 +41,132 @@ export const Hero: React.FC = () => {
           </div>
         </div>
 
-        <div className="relative w-full max-w-[480px] mx-auto min-h-[530px] flex flex-col justify-between p-7 sm:p-9 text-center filter drop-shadow-[0_22px_40px_rgba(0,0,0,0.28)]" aria-label="Коротко про програму">
-          {/* SVG Shield Frame (English Shield / English écu with wider bottom) */}
-          <svg 
-            className="absolute inset-0 w-full h-full text-white pointer-events-none" 
-            viewBox="0 0 400 500" 
-            preserveAspectRatio="none" 
+        <div
+          className="relative mx-auto h-[550px] w-full max-w-[460px] text-center
+                     filter drop-shadow-[0_22px_40px_rgba(0,0,0,0.28)]
+                     sm:h-[570px]"
+          aria-label="Коротко про програму"
+        >
+          {/*
+            Shield frame.
+
+            The silhouette is based on shield 3:4 from the selected reference:
+            broad, almost vertical sides; a restrained central crest; and a
+            short lower point. The lower taper starts below the text's safe
+            zone, so the content remains inside both contours.
+          */}
+          <svg
+            className="pointer-events-none absolute inset-0 h-full w-full"
+            viewBox="0 0 400 540"
+            preserveAspectRatio="none"
             fill="none"
+            aria-hidden="true"
           >
-            {/* Fill & Outer Border */}
-            <path 
-              d="M 200,28 C 260,8 330,8 384,22 C 388,180 380,310 330,398 C 280,470 230,488 200,492 C 170,488 120,470 70,398 C 20,310 12,180 16,22 C 70,8 140,8 200,28 Z" 
-              fill="#ffffff" 
-              stroke="#082d20" 
-              strokeWidth="7" 
-              strokeLinejoin="round" 
+            {/* White body and dark outer border */}
+            <path
+              d="
+                M 22 58
+                C 58 45, 95 42, 129 48
+                C 157 54, 178 46, 195 32
+                C 198 29, 202 29, 205 32
+                C 222 46, 243 54, 271 48
+                C 305 42, 342 45, 378 58
+                L 378 306
+                C 378 397, 328 472, 200 530
+                C 72 472, 22 397, 22 306
+                Z
+              "
+              fill="#ffffff"
+              stroke="#082d20"
+              strokeWidth="7"
+              strokeLinejoin="round"
             />
-            {/* Inner Accent Line */}
-            <path 
-              d="M 200,42 C 255,24 318,24 370,36 C 374,180 366,298 320,380 C 274,450 226,470 200,474 C 174,470 126,450 80,380 C 34,298 26,180 30,36 C 82,24 145,24 200,42 Z" 
-              fill="none" 
-              stroke="#04a64b" 
-              strokeWidth="3.5" 
+
+            {/* Green inner accent with a visually even inset */}
+            <path
+              d="
+                M 38 70
+                C 68 60, 99 57, 131 62
+                C 159 68, 180 61, 197 47
+                C 199 45, 201 45, 203 47
+                C 220 61, 241 68, 269 62
+                C 301 57, 332 60, 362 70
+                L 362 306
+                C 362 385, 318 452, 200 511
+                C 82 452, 38 385, 38 306
+                Z
+              "
+              stroke="#04a64b"
+              strokeWidth="3.5"
               strokeLinejoin="round"
               opacity="0.9"
             />
           </svg>
 
-          {/* Content layered over the shield */}
-          <div className="relative z-10 pt-5 px-3.5 sm:px-4 flex flex-col h-full">
-            {/* Top Row: Left (Group size) & Right (Practice) with enlarged text and adjusted margins */}
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5 text-center pb-4 mb-2 border-b border-[#082d20]/12">
-              <div className="-ml-3 flex flex-col justify-center items-center bg-[#f0f7f3] p-3 sm:p-3.5 rounded-2xl border border-[#04a64b]/35 shadow-xs">
-                <b className="text-[19px] w-[125px] font-black text-[#082d20] block leading-tight">До 14 осіб</b>
-                <span className="text-[17px] w-[125px] text-[#46574c] font-semibold leading-tight block mt-1">у групі</span>
+          {/*
+            Rectangular content is deliberately limited to 76% of the shield's
+            width. This is the safe area above the lower taper.
+          */}
+          <div
+            className="relative z-10 mx-auto flex h-full w-[76%] max-w-[330px]
+                       flex-col pt-[84px] sm:pt-[88px]"
+          >
+            <div
+              className="mx-auto mb-1 grid w-[92%] grid-cols-2 gap-2.5 border-b
+                         border-[#082d20]/12 pb-4 text-center sm:gap-3.5"
+            >
+              <div
+                className="flex min-h-[92px] min-w-0 flex-col items-center
+                           justify-center rounded-2xl border border-[#04a64b]/35
+                           bg-[#f0f7f3] p-2.5 shadow-xs sm:p-3.5"
+              >
+                <b className="block text-[17px] font-black leading-tight text-[#082d20] sm:text-[19px]">
+                  До 14 осіб
+                </b>
+                <span className="mt-1 block text-[15px] font-semibold leading-tight text-[#46574c] sm:text-[17px]">
+                  у групі
+                </span>
               </div>
 
-              <div className="-mr-3 flex flex-col justify-center items-center bg-[#f0f7f3] p-3 sm:p-3.5 rounded-2xl border border-[#04a64b]/35 shadow-xs">
-                <b className="text-[19px] w-[125px] font-black text-[#082d20] block leading-tight">Практика</b>
-                <span className="text-[16px] w-[125px] text-[#46574c] font-semibold leading-tight block mt-1">сценарії й вправи</span>
+              <div
+                className="flex min-h-[92px] min-w-0 flex-col items-center
+                           justify-center rounded-2xl border border-[#04a64b]/35
+                           bg-[#f0f7f3] p-2.5 shadow-xs sm:p-3.5"
+              >
+                <b className="block text-[17px] font-black leading-tight text-[#082d20] sm:text-[19px]">
+                  Практика
+                </b>
+                <span className="mt-1 block text-[14px] font-semibold leading-tight text-[#46574c] sm:text-[16px]">
+                  сценарії й вправи
+                </span>
               </div>
             </div>
 
-            {/* Below Center: Remaining Content */}
-            <div className="flex-1 flex flex-col items-center justify-start pt-3 px-4">
-              <div className="-mt-3 w-[150px] inline-flex items-center justify-center pl-4 pt-[5px] pb-[6px] rounded-full bg-[#e8f3ed] text-[#1b7048] font-black mb-2">
-                <span className="text-[17px] pr-[15px]">Вік: 5+ років</span>
+            <div className="flex flex-1 flex-col items-center justify-start px-1 pt-3 sm:px-3">
+              <div
+                className="mb-3 inline-flex min-h-[37px] min-w-[150px]
+                           items-center justify-center rounded-full bg-[#e8f3ed]
+                           px-4 text-[#1b7048]"
+              >
+                <span className="text-[16px] font-black sm:text-[17px]">
+                  Вік: 5+ років
+                </span>
               </div>
 
-              <h3 className="font-extrabold text-[20px] text-[#082d20] mb-2 leading-snug">
+              <h3
+                className="mb-3 max-w-[260px] text-[19px] font-extrabold
+                           leading-snug text-[#082d20] sm:text-[20px]"
+              >
                 Навички безпеки з дитинства
               </h3>
 
-              <p className="text-[17px] leading-relaxed text-[#64726a] max-w-[310px] mx-auto pb-[40px] mb-0">
-                Навчаємо розпізнавати ризики, діяти впевнено, звертатися по допомогу та
-                захищати себе у зрозумілій і доброзичливій формі.
+              <p
+                className="mx-auto mb-0 max-w-[270px] text-[15px] leading-[1.62]
+                           text-[#64726a] sm:max-w-[290px] sm:text-[16px]"
+              >
+                Навчаємо розпізнавати ризики, діяти впевнено, звертатися по
+                допомогу та захищати себе у зрозумілій і доброзичливій
+                <span className="block">формі.</span>
               </p>
             </div>
           </div>

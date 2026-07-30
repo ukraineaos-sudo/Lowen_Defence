@@ -19,7 +19,7 @@ export const Footer: React.FC<FooterProps> = ({ contacts, onOpenPrivacy }) => {
         <div className="footer-brand">
           <div className="brand-mark brand-mark--footer">
             <img
-              src="/logo/logo.png"
+              src="/logo/logo-mark.png"
               alt="Löwen Defence®"
               className="brand-mark-img"
               onError={(e) => {
