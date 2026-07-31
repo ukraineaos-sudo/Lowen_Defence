@@ -1,9 +1,18 @@
 /**
  * BusinessSection.tsx — корпоративні програми
  */
+"use client";
+
 import React from "react";
 import { ResponsiveImage } from "./ResponsiveImage";
-import { ArrowRight, Building2, ShieldCheck, MessageSquare, Flame } from "lucide-react";
+import {
+  ArrowRight,
+  Building2,
+  ShieldCheck,
+  MessageSquare,
+  Flame,
+} from "lucide-react";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 interface BusinessSectionProps {
   onSelectBusiness: () => void;
@@ -12,23 +21,13 @@ interface BusinessSectionProps {
 export const BusinessSection: React.FC<BusinessSectionProps> = ({
   onSelectBusiness,
 }) => {
-  const blocks = [
-    {
-      icon: <MessageSquare className="w-5 h-5 text-white mb-2" />,
-      title: "Розмова з агресивним співрозмовником",
-    },
-    {
-      icon: <ShieldCheck className="w-5 h-5 text-white mb-2" />,
-      title: "Деескалація замість конфронтації",
-    },
-    {
-      icon: <Flame className="w-5 h-5 text-white mb-2" />,
-      title: "Дії при погрозі або нападі",
-    },
-    {
-      icon: <Building2 className="w-5 h-5 text-white mb-2" />,
-      title: "Практичні сценарії для вашої організації",
-    },
+  const { dict } = useI18n();
+
+  const icons = [
+    <MessageSquare key="msg" className="w-5 h-5 text-white mb-2" />,
+    <ShieldCheck key="shield" className="w-5 h-5 text-white mb-2" />,
+    <Flame key="flame" className="w-5 h-5 text-white mb-2" />,
+    <Building2 key="building" className="w-5 h-5 text-white mb-2" />,
   ];
 
   return (
@@ -36,27 +35,27 @@ export const BusinessSection: React.FC<BusinessSectionProps> = ({
       <div className="container business-grid">
         <div>
           <span className="eyebrow" style={{ color: "#d2e6d8" }}>
-            Для бізнесу та організацій
+            {dict.business.eyebrow}
           </span>
-          <h2>Корпоративний тренінг «Безпекова обізнаність»</h2>
-          <p className="section-lead">
-            Працівники, які контактують з клієнтами та відвідувачами, можуть
-            стикатися з образами, погрозами, агресією або нападом. Навчання поєднує
-            комунікацію, деескалацію, правила поведінки у небезпеці та практичний
-            самозахист.
-          </p>
+          <h2>{dict.business.title}</h2>
+          <p className="section-lead">{dict.business.lead}</p>
 
           <div className="business-list">
-            {blocks.map((block, idx) => (
-              <div key={idx} className="flex flex-col items-start justify-center p-4 rounded-2xl bg-[#0d3f2c] border border-[#1b7048]/50">
-                {block.icon}
-                <span className="font-bold text-sm leading-snug text-white">{block.title}</span>
+            {dict.business.blocks.map((title, idx) => (
+              <div
+                key={idx}
+                className="flex flex-col items-start justify-center p-4 rounded-2xl bg-[#0d3f2c] border border-[#1b7048]/50"
+              >
+                {icons[idx]}
+                <span className="font-bold text-sm leading-snug text-white">
+                  {title}
+                </span>
               </div>
             ))}
           </div>
 
           <button onClick={onSelectBusiness} className="btn btn-primary">
-            <span>Отримати пропозицію</span>
+            <span>{dict.business.cta}</span>
             <ArrowRight className="w-5 h-5 stroke-[2.5]" />
           </button>
         </div>
@@ -65,7 +64,7 @@ export const BusinessSection: React.FC<BusinessSectionProps> = ({
           <ResponsiveImage
             image={{
               url: "/business/business-training.png",
-              alt: "Корпоративне навчання Löwen Defence",
+              alt: dict.business.imageAlt,
               focalX: 50,
               focalY: 50,
             }}

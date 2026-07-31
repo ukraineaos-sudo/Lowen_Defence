@@ -1,15 +1,20 @@
 /**
  * TeamSection.tsx — команда інструкторів
  */
+"use client";
+
 import React from "react";
-import { TeamMember } from "../../types/content";
+import type { ResolvedTeamMember } from "@/lib/i18n/resolve-content";
 import { ResponsiveImage } from "./ResponsiveImage";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 interface TeamSectionProps {
-  team: TeamMember[];
+  team: ResolvedTeamMember[];
 }
 
 export const TeamSection: React.FC<TeamSectionProps> = ({ team }) => {
+  const { dict } = useI18n();
+
   const activeMembers = team
     .filter((m) => m.enabled)
     .sort((a, b) => a.order - b.order);
@@ -19,13 +24,10 @@ export const TeamSection: React.FC<TeamSectionProps> = ({ team }) => {
       <div className="container">
         <div className="section-head">
           <div>
-            <span className="eyebrow">Команда</span>
-            <h2>Löwen Defence Україна</h2>
+            <span className="eyebrow">{dict.team.eyebrow}</span>
+            <h2>{dict.team.title}</h2>
           </div>
-          <p className="section-lead">
-            Міжнародна експертиза, українське партнерство та спільна мета — навчати
-            безпеки так, щоб люди ставали сильнішими, а не наляканими.
-          </p>
+          <p className="section-lead">{dict.team.lead}</p>
         </div>
 
         <div className="team-grid">

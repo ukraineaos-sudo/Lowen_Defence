@@ -1,8 +1,10 @@
 /**
- * layout.tsx — кореневий layout Next.js (шрифти, metadata)
+ * layout.tsx — кореневий layout Next.js (шрифти, metadata, html lang з cookie)
  */
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
+import { getRequestLocale } from "@/lib/i18n/get-request-locale";
+import { htmlLang } from "@/lib/i18n/locale";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -26,13 +28,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getRequestLocale();
+
   return (
-    <html lang="uk" className={manrope.variable}>
+    <html lang={htmlLang(locale)} className={manrope.variable}>
       <body className={manrope.className}>{children}</body>
     </html>
   );

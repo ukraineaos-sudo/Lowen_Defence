@@ -1,10 +1,15 @@
 /**
  * Hero.tsx — головний екран лендингу
  */
+"use client";
+
 import React from "react";
 import { ArrowRight } from "lucide-react";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 export const Hero: React.FC = () => {
+  const { dict } = useI18n();
+
   const handleScroll = (id: string) => {
     const el = document.querySelector(id);
     if (el) el.scrollIntoView({ behavior: "smooth" });
@@ -15,28 +20,25 @@ export const Hero: React.FC = () => {
       <div className="container hero-grid relative z-10">
         <div className="hero-copy">
           <span className="eyebrow" style={{ color: "#e8f3ed" }}>
-            Німецька методика · українська команда
+            {dict.hero.eyebrow}
           </span>
           <h1>
-            Створюємо обізнаність, <span>не викликаючи страху</span>
+            {dict.hero.titleBefore} <span>{dict.hero.titleAccent}</span>
           </h1>
-          <p className="lead">
-            Практичні курси безпечної поведінки, впевненості, деескалації та самозахисту
-            для дітей, підлітків, жінок, батьків, закладів освіти й компаній.
-          </p>
+          <p className="lead">{dict.hero.lead}</p>
           <div className="hero-actions">
             <button
               onClick={() => handleScroll("#courses")}
               className="btn btn-primary"
             >
-              <span>Обрати курс</span>
+              <span>{dict.hero.ctaCourses}</span>
               <ArrowRight className="w-5 h-5 stroke-[2.5]" />
             </button>
             <button
               onClick={() => handleScroll("#contact")}
               className="btn btn-secondary"
             >
-              Запросити тренінг
+              {dict.hero.ctaTraining}
             </button>
           </div>
         </div>
@@ -45,16 +47,8 @@ export const Hero: React.FC = () => {
           className="relative mx-auto h-[550px] w-full max-w-[460px] text-center
                      filter drop-shadow-[0_22px_40px_rgba(0,0,0,0.28)]
                      sm:h-[570px]"
-          aria-label="Коротко про програму"
+          aria-label={dict.hero.shieldAria}
         >
-          {/*
-            Shield frame.
-
-            The silhouette is based on shield 3:4 from the selected reference:
-            broad, almost vertical sides; a restrained central crest; and a
-            short lower point. The lower taper starts below the text's safe
-            zone, so the content remains inside both contours.
-          */}
           <svg
             className="pointer-events-none absolute inset-0 h-full w-full"
             viewBox="0 0 400 540"
@@ -62,7 +56,6 @@ export const Hero: React.FC = () => {
             fill="none"
             aria-hidden="true"
           >
-            {/* White body and dark outer border */}
             <path
               d="
                 M 22 58
@@ -82,7 +75,6 @@ export const Hero: React.FC = () => {
               strokeLinejoin="round"
             />
 
-            {/* Green inner accent with a visually even inset */}
             <path
               d="
                 M 38 70
@@ -103,10 +95,6 @@ export const Hero: React.FC = () => {
             />
           </svg>
 
-          {/*
-            Rectangular content is deliberately limited to 76% of the shield's
-            width. This is the safe area above the lower taper.
-          */}
           <div
             className="relative z-10 mx-auto flex h-full w-[76%] max-w-[330px]
                        flex-col pt-[84px] sm:pt-[88px]"
@@ -121,10 +109,10 @@ export const Hero: React.FC = () => {
                            bg-[#f0f7f3] p-2.5 shadow-xs sm:p-3.5"
               >
                 <b className="block text-[17px] font-black leading-tight text-[#082d20] sm:text-[19px]">
-                  До 14 осіб
+                  {dict.hero.statGroupValue}
                 </b>
                 <span className="mt-1 block text-[15px] font-semibold leading-tight text-[#46574c] sm:text-[17px]">
-                  у групі
+                  {dict.hero.statGroupLabel}
                 </span>
               </div>
 
@@ -134,10 +122,10 @@ export const Hero: React.FC = () => {
                            bg-[#f0f7f3] p-2.5 shadow-xs sm:p-3.5"
               >
                 <b className="block text-[17px] font-black leading-tight text-[#082d20] sm:text-[19px]">
-                  Практика
+                  {dict.hero.statPracticeValue}
                 </b>
                 <span className="mt-1 block text-[14px] font-semibold leading-tight text-[#46574c] sm:text-[16px]">
-                  сценарії й вправи
+                  {dict.hero.statPracticeLabel}
                 </span>
               </div>
             </div>
@@ -149,7 +137,7 @@ export const Hero: React.FC = () => {
                            px-4 text-[#1b7048]"
               >
                 <span className="text-[16px] font-black sm:text-[17px]">
-                  Вік: 5+ років
+                  {dict.hero.ageBadge}
                 </span>
               </div>
 
@@ -157,16 +145,15 @@ export const Hero: React.FC = () => {
                 className="mb-3 max-w-[260px] text-[19px] font-extrabold
                            leading-snug text-[#082d20] sm:text-[20px]"
               >
-                Навички безпеки з дитинства
+                {dict.hero.shieldTitle}
               </h3>
 
               <p
                 className="mx-auto mb-0 max-w-[270px] text-[15px] leading-[1.62]
                            text-[#64726a] sm:max-w-[290px] sm:text-[16px]"
               >
-                Навчаємо розпізнавати ризики, діяти впевнено, звертатися по
-                допомогу та захищати себе у зрозумілій і доброзичливій
-                <span className="block">формі.</span>
+                {dict.hero.shieldText}{" "}
+                <span className="block">{dict.hero.shieldTextLine}</span>
               </p>
             </div>
           </div>

@@ -1,30 +1,15 @@
 /**
  * FaqSection.tsx — FAQ акордеон
  */
+"use client";
+
 import React, { useState } from "react";
 import { Plus, Minus } from "lucide-react";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 export const FaqSection: React.FC = () => {
+  const { dict } = useI18n();
   const [openIndices, setOpenIndices] = useState<number[]>([0]);
-
-  const faqs = [
-    {
-      q: "Чи не налякає курс дитину?",
-      a: "Ні. Методика спеціально побудована так, щоб створювати обізнаність без залякування. Є місце для гумору, руху та позитивних емоцій.",
-    },
-    {
-      q: "Чи навчаєте ви дітей битися?",
-      a: "Основний акцент — на розпізнаванні ризику, комунікації, дистанції, деескалації та виході з небезпечної ситуації. Самозахист — лише одна з частин програми.",
-    },
-    {
-      q: "Чи можна запросити тренерів до школи або компанії?",
-      a: "Так. Команда проводить виїзні курси та адаптує сценарії до потреб закладу, громади чи підприємства.",
-    },
-    {
-      q: "Що отримують учасники після курсу?",
-      a: "Кожен учасник отримує сертифікат, а головне — практичні алгоритми й досвід безпечного реагування.",
-    },
-  ];
 
   const toggleFaq = (index: number) => {
     if (openIndices.includes(index)) {
@@ -38,16 +23,13 @@ export const FaqSection: React.FC = () => {
     <section id="faq">
       <div className="container faq-grid">
         <div>
-          <span className="eyebrow">Поширені питання</span>
-          <h2>Перед записом на курс</h2>
-          <p className="section-lead">
-            Формат можна адаптувати до віку, групи, місця проведення та запиту
-            організації.
-          </p>
+          <span className="eyebrow">{dict.faq.eyebrow}</span>
+          <h2>{dict.faq.title}</h2>
+          <p className="section-lead">{dict.faq.lead}</p>
         </div>
 
         <div className="faq-list">
-          {faqs.map((faq, index) => {
+          {dict.faq.items.map((faq, index) => {
             const isOpen = openIndices.includes(index);
 
             return (
@@ -63,7 +45,11 @@ export const FaqSection: React.FC = () => {
                 >
                   <span className="pr-4">{faq.q}</span>
                   <span className="shrink-0 font-extrabold text-[#1b7048]">
-                    {isOpen ? <Minus className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                    {isOpen ? (
+                      <Minus className="w-5 h-5" />
+                    ) : (
+                      <Plus className="w-5 h-5" />
+                    )}
                   </span>
                 </button>
                 <div

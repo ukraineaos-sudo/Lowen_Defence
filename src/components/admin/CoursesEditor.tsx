@@ -5,6 +5,10 @@ import React, { useState } from "react";
 import { Course } from "../../types/content";
 import { ImageFocalPointPicker } from "./ImageFocalPointPicker";
 import {
+  localizedUk,
+  withLocalizedUk,
+} from "@/lib/i18n/localized";
+import {
   ArrowUp,
   ArrowDown,
   Eye,
@@ -94,7 +98,10 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
     const copy: Course = {
       ...course,
       id: newId,
-      title: `${course.title} (Копія)`,
+      title: withLocalizedUk(
+        course.title,
+        `${localizedUk(course.title)} (Копія)`
+      ),
       order: courses.length + 1,
       featured: false,
     };
@@ -173,7 +180,7 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-black opacity-60">#{index + 1}</span>
                       <span className="font-extrabold text-sm truncate">
-                        {course.title}
+                        {localizedUk(course.title)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
@@ -184,10 +191,10 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
                             : "bg-[#edf5ef] text-[#1b7048]"
                         }`}
                       >
-                        {course.tag}
+                        {localizedUk(course.tag)}
                       </span>
                       <span className="text-xs font-semibold opacity-75">
-                        {course.price}
+                        {localizedUk(course.price)}
                       </span>
                     </div>
                   </div>
@@ -271,7 +278,9 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
                     </button>
                     <button
                       type="button"
-                      onClick={() => deleteCourse(course.id, course.title)}
+                      onClick={() =>
+                        deleteCourse(course.id, localizedUk(course.title))
+                      }
                       className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-1 text-xs font-bold"
                       title="Видалити курс"
                     >
@@ -288,9 +297,11 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
                     </label>
                     <input
                       type="text"
-                      value={course.tag}
+                      value={localizedUk(course.tag)}
                       onChange={(e) =>
-                        updateCourse(course.id, { tag: e.target.value })
+                        updateCourse(course.id, {
+                          tag: withLocalizedUk(course.tag, e.target.value),
+                        })
                       }
                       className="w-full border border-gray-300 rounded-xl p-2.5 text-sm font-semibold"
                       placeholder="напр. 5–7 років"
@@ -303,9 +314,11 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
                     </label>
                     <input
                       type="text"
-                      value={course.title}
+                      value={localizedUk(course.title)}
                       onChange={(e) =>
-                        updateCourse(course.id, { title: e.target.value })
+                        updateCourse(course.id, {
+                          title: withLocalizedUk(course.title, e.target.value),
+                        })
                       }
                       className="w-full border border-gray-300 rounded-xl p-2.5 text-sm font-extrabold"
                       placeholder="Назва..."
@@ -319,9 +332,14 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
                   </label>
                   <textarea
                     rows={3}
-                    value={course.description}
+                    value={localizedUk(course.description)}
                     onChange={(e) =>
-                      updateCourse(course.id, { description: e.target.value })
+                      updateCourse(course.id, {
+                        description: withLocalizedUk(
+                          course.description,
+                          e.target.value
+                        ),
+                      })
                     }
                     className="w-full border border-gray-300 rounded-xl p-2.5 text-xs leading-relaxed"
                     placeholder="Короткий практичний опис..."
@@ -335,9 +353,11 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
                     </label>
                     <input
                       type="text"
-                      value={course.price}
+                      value={localizedUk(course.price)}
                       onChange={(e) =>
-                        updateCourse(course.id, { price: e.target.value })
+                        updateCourse(course.id, {
+                          price: withLocalizedUk(course.price, e.target.value),
+                        })
                       }
                       className="w-full border border-gray-300 rounded-xl p-2.5 text-sm font-bold"
                       placeholder="850 грн або За запитом"
@@ -350,9 +370,14 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
                     </label>
                     <input
                       type="text"
-                      value={course.priceNote}
+                      value={localizedUk(course.priceNote)}
                       onChange={(e) =>
-                        updateCourse(course.id, { priceNote: e.target.value })
+                        updateCourse(course.id, {
+                          priceNote: withLocalizedUk(
+                            course.priceNote,
+                            e.target.value
+                          ),
+                        })
                       }
                       className="w-full border border-gray-300 rounded-xl p-2.5 text-sm"
                       placeholder="за учасника"
@@ -365,9 +390,14 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
                     </label>
                     <input
                       type="text"
-                      value={course.buttonLabel || "Записатися"}
+                      value={localizedUk(course.buttonLabel) || "Записатися"}
                       onChange={(e) =>
-                        updateCourse(course.id, { buttonLabel: e.target.value })
+                        updateCourse(course.id, {
+                          buttonLabel: withLocalizedUk(
+                            course.buttonLabel,
+                            e.target.value
+                          ),
+                        })
                       }
                       className="w-full border border-gray-300 rounded-xl p-2.5 text-sm"
                       placeholder="Записатися / Дізнатися"
@@ -386,7 +416,7 @@ export const CoursesEditor: React.FC<CoursesEditorProps> = ({
                         key={idx}
                         className="bg-gray-100 border border-gray-300 text-xs px-2.5 py-1 rounded-full flex items-center gap-1 font-bold"
                       >
-                        <span>{m}</span>
+                        <span>{localizedUk(m)}</span>
                         <button
                           type="button"
                           onClick={() => {

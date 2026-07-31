@@ -5,6 +5,7 @@
 import React, { useState } from "react";
 import { TeamMember } from "../../types/content";
 import { ImageFocalPointPicker } from "./ImageFocalPointPicker";
+import { localizedUk, withLocalizedUk } from "@/lib/i18n/localized";
 import { ArrowUp, ArrowDown, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
 
 interface TeamEditorProps {
@@ -135,11 +136,11 @@ export const TeamEditor: React.FC<TeamEditorProps> = ({
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-black opacity-60">#{index + 1}</span>
                       <span className="font-extrabold text-sm truncate">
-                        {member.name}
+                        {localizedUk(member.name)}
                       </span>
                     </div>
                     <p className="text-xs opacity-75 truncate mt-0.5">
-                      {member.description}
+                      {localizedUk(member.description)}
                     </p>
                   </div>
                 </div>
@@ -186,7 +187,9 @@ export const TeamEditor: React.FC<TeamEditorProps> = ({
 
                   <button
                     type="button"
-                    onClick={() => deleteMember(member.id, member.name)}
+                    onClick={() =>
+                      deleteMember(member.id, localizedUk(member.name))
+                    }
                     className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-1 text-xs font-bold"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -200,9 +203,11 @@ export const TeamEditor: React.FC<TeamEditorProps> = ({
                   </label>
                   <input
                     type="text"
-                    value={member.name}
+                    value={localizedUk(member.name)}
                     onChange={(e) =>
-                      updateMember(member.id, { name: e.target.value })
+                      updateMember(member.id, {
+                        name: withLocalizedUk(member.name, e.target.value),
+                      })
                     }
                     className="w-full border border-gray-300 rounded-xl p-2.5 text-sm font-extrabold"
                     placeholder="Фелікс Тимченко"
@@ -215,9 +220,14 @@ export const TeamEditor: React.FC<TeamEditorProps> = ({
                   </label>
                   <textarea
                     rows={3}
-                    value={member.description}
+                    value={localizedUk(member.description)}
                     onChange={(e) =>
-                      updateMember(member.id, { description: e.target.value })
+                      updateMember(member.id, {
+                        description: withLocalizedUk(
+                          member.description,
+                          e.target.value
+                        ),
+                      })
                     }
                     className="w-full border border-gray-300 rounded-xl p-2.5 text-xs leading-relaxed"
                     placeholder="Засновник, автор методики..."

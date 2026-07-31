@@ -1,9 +1,14 @@
 /**
  * content.ts — типи SiteContent / Course / Team / Contacts
+ * Текстові CMS-поля: LocalizedText = string (uk) | { uk, en? }.
  */
+import type { LocalizedText } from "@/lib/i18n/localized";
+
+export type { LocalizedText };
+
 export interface ResponsiveImageData {
   url: string;
-  alt: string;
+  alt: LocalizedText;
   focalX: number; // 0 - 100
   focalY: number; // 0 - 100
   mobileUrl?: string;
@@ -16,13 +21,13 @@ export interface Course {
   enabled: boolean;
   featured: boolean;
   order: number;
-  tag: string;
-  title: string;
-  description: string;
-  meta: string[];
-  price: string;
-  priceNote: string;
-  buttonLabel: string;
+  tag: LocalizedText;
+  title: LocalizedText;
+  description: LocalizedText;
+  meta: LocalizedText[];
+  price: LocalizedText;
+  priceNote: LocalizedText;
+  buttonLabel: LocalizedText;
   image: ResponsiveImageData;
 }
 
@@ -30,8 +35,8 @@ export interface TeamMember {
   id: string;
   enabled: boolean;
   order: number;
-  name: string;
-  description: string;
+  name: LocalizedText;
+  description: LocalizedText;
   image: ResponsiveImageData;
 }
 

@@ -127,9 +127,42 @@ const imageUrlSchema = z
   .max(1000)
   .refine(isSafeImageUrl, "Некоректний URL зображення");
 
+/**
+ * CMS-текст: plain string (uk) або { uk, en? }.
+ * Старий JSON без en валідний; порожній en відкидаємо на optional.
+ */
+function localizedTextSchema(max: number, min = 1) {
+  const plain = z.string().trim().min(min).max(max);
+  const dual = z.object({
+    uk: z.string().trim().min(min).max(max),
+    en: z
+      .string()
+      .trim()
+      .max(max)
+      .optional()
+      .transform((v) => (v && v.length > 0 ? v : undefined)),
+  });
+  return z.union([plain, dual]);
+}
+
+/** Як localizedTextSchema, але допускає порожній uk/string (price / priceNote). */
+function localizedTextOptionalSchema(max: number) {
+  const plain = z.string().trim().max(max);
+  const dual = z.object({
+    uk: z.string().trim().max(max),
+    en: z
+      .string()
+      .trim()
+      .max(max)
+      .optional()
+      .transform((v) => (v && v.length > 0 ? v : undefined)),
+  });
+  return z.union([plain, dual]);
+}
+
 const responsiveImageSchema = z.object({
   url: imageUrlSchema,
-  alt: z.string().trim().min(1).max(300),
+  alt: localizedTextSchema(300),
   focalX: focalSchema,
   focalY: focalSchema,
   mobileUrl: optionalImageUrl(),
@@ -142,13 +175,13 @@ const courseSchema = z.object({
   enabled: z.boolean(),
   featured: z.boolean(),
   order: z.number().int().positive(),
-  tag: z.string().trim().min(1).max(200),
-  title: z.string().trim().min(1).max(160),
-  description: z.string().trim().min(1).max(2000),
-  meta: z.array(z.string().trim().min(1).max(200)).max(8),
-  price: z.string().trim().max(200),
-  priceNote: z.string().trim().max(200),
-  buttonLabel: z.string().trim().min(1).max(200),
+  tag: localizedTextSchema(200),
+  title: localizedTextSchema(160),
+  description: localizedTextSchema(2000),
+  meta: z.array(localizedTextSchema(200)).max(8),
+  price: localizedTextOptionalSchema(200),
+  priceNote: localizedTextOptionalSchema(200),
+  buttonLabel: localizedTextSchema(200),
   image: responsiveImageSchema,
 });
 
@@ -156,11 +189,10 @@ const teamSchema = z.object({
   id: z.string().trim().min(1).max(80),
   enabled: z.boolean(),
   order: z.number().int().positive(),
-  name: z.string().trim().min(1).max(200),
-  description: z.string().trim().min(1).max(2000),
+  name: localizedTextSchema(200),
+  description: localizedTextSchema(2000),
   image: responsiveImageSchema,
 });
-
 const contactsSchema = z.object({
   phoneDisplay: z.string().trim().min(1).max(100),
   phoneHref: z

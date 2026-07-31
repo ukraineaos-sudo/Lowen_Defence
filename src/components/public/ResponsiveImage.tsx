@@ -3,10 +3,13 @@
  */
 import React, { useState } from "react";
 import { ResponsiveImageData } from "../../types/content";
+import { localizedUk } from "@/lib/i18n/localized";
 import { ShieldAlert } from "lucide-react";
 
 interface ResponsiveImageProps {
-  image?: ResponsiveImageData;
+  image?:
+    | ResponsiveImageData
+    | { url: string; alt: string; focalX: number; focalY: number };
   fallbackAlt?: string;
   className?: string;
   aspectRatio?: string;
@@ -19,6 +22,7 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
   aspectRatio,
 }) => {
   const [hasError, setHasError] = useState(false);
+  const altText = image?.alt ? localizedUk(image.alt) : fallbackAlt;
 
   if (!image || !image.url || hasError) {
     return (
@@ -30,7 +34,7 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
         <span className="font-extrabold text-sm tracking-wide text-white">
           Löwen Defence®
         </span>
-        <span className="text-xs text-[#a9cdb8] mt-1">{image?.alt || fallbackAlt}</span>
+        <span className="text-xs text-[#a9cdb8] mt-1">{altText}</span>
       </div>
     );
   }
@@ -41,7 +45,7 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
   return (
     <img
       src={image.url}
-      alt={image.alt || fallbackAlt}
+      alt={altText || fallbackAlt}
       referrerPolicy="no-referrer"
       onError={() => setHasError(true)}
       className={`w-full h-full object-cover ${className}`}

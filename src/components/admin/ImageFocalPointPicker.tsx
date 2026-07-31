@@ -5,6 +5,7 @@
 import React, { useRef, useState } from "react";
 import { ResponsiveImageData } from "../../types/content";
 import { adminFetch } from "@/lib/admin/admin-fetch";
+import { localizedUk, withLocalizedUk } from "@/lib/i18n/localized";
 import { Upload, Focus, RefreshCw, Smartphone, Monitor, Tablet } from "lucide-react";
 
 interface ImageFocalPointPickerProps {
@@ -87,7 +88,10 @@ export const ImageFocalPointPicker: React.FC<ImageFocalPointPickerProps> = ({
         onChange({
           ...image,
           url: result.data.url,
-          alt: image.alt || file.name.split(".")[0],
+          alt: withLocalizedUk(
+            image.alt,
+            localizedUk(image.alt) || file.name.split(".")[0] || "image"
+          ),
         });
         setLocalPreviewUrl(null);
       } else if (!result.ok && result.error.status !== 401) {
@@ -147,8 +151,13 @@ export const ImageFocalPointPicker: React.FC<ImageFocalPointPickerProps> = ({
           <label className="block text-[#64726a] font-bold mb-1">Alt опис (SEO)</label>
           <input
             type="text"
-            value={image.alt || ""}
-            onChange={(e) => onChange({ ...image, alt: e.target.value })}
+            value={localizedUk(image.alt || "")}
+            onChange={(e) =>
+              onChange({
+                ...image,
+                alt: withLocalizedUk(image.alt, e.target.value),
+              })
+            }
             placeholder="Опис фото..."
             className="w-full border border-gray-300 rounded-lg p-2 text-xs"
           />
@@ -166,7 +175,7 @@ export const ImageFocalPointPicker: React.FC<ImageFocalPointPickerProps> = ({
             <img
               ref={imageRef}
               src={displayUrl}
-              alt={image.alt || "Preview"}
+              alt={localizedUk(image.alt || "") || "Preview"}
               onClick={handleImageClick}
               className="w-full max-h-[260px] object-contain select-none"
               referrerPolicy="no-referrer"
@@ -235,7 +244,7 @@ export const ImageFocalPointPicker: React.FC<ImageFocalPointPickerProps> = ({
             >
               <img
                 src={displayUrl}
-                alt={image.alt}
+                alt={localizedUk(image.alt || "")}
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover"
                 style={{

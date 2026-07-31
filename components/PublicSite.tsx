@@ -1,10 +1,13 @@
 /**
- * PublicSite.tsx — збірка публічного лендингу з контенту
+ * PublicSite.tsx — збірка публічного лендингу з контенту + i18n
  */
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import type { SiteContent } from "@/src/types/content";
+import { I18nProvider, useI18n } from "@/lib/i18n/I18nProvider";
+import { resolveSiteContent } from "@/lib/i18n/resolve-content";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locale";
 import { Header } from "@/src/components/public/Header";
 import { Hero } from "@/src/components/public/Hero";
 import { TrustStrip } from "@/src/components/public/TrustStrip";
@@ -21,10 +24,24 @@ import { PrivacyModal } from "@/src/components/public/PrivacyModal";
 
 type PublicSiteProps = {
   content: SiteContent;
+  locale?: Locale;
   showAdminLink?: boolean;
 };
 
-export function PublicSite({ content, showAdminLink = true }: PublicSiteProps) {
+/** Внутрішня розмітка з резолвом CMS-текстів під поточну локаль. */
+function PublicSiteBody({
+  content,
+  showAdminLink,
+}: {
+  content: SiteContent;
+  showAdminLink: boolean;
+}) {
+  const { locale } = useI18n();
+  const resolved = useMemo(
+    () => resolveSiteContent(content, locale),
+    [content, locale]
+  );
+
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
 
@@ -39,42 +56,54 @@ export function PublicSite({ content, showAdminLink = true }: PublicSiteProps) {
     <>
       {/* --- 2. Розмітка секцій лендингу --- */}
       <div id="top" className="min-h-screen bg-white text-[#13241c] flex flex-col">
-      <Header
-        showAdminLink={showAdminLink}
-        germanWebsiteUrl={content.contacts.germanWebsiteUrl}
-      />
-
-      <main className="flex-1">
-        <Hero />
-        <TrustStrip />
-        <WhySection />
-        <CoursesSection
-          courses={content.courses}
-          onSelectCourse={handleSelectCourse}
+        <Header
+          showAdminLink={showAdminLink}
+          germanWebsiteUrl={resolved.contacts.germanWebsiteUrl}
         />
-        <MethodSection />
-        <BusinessSection onSelectBusiness={() => handleSelectCourse("corporate")} />
-        <StandardsSection />
-        <TeamSection team={content.team} />
-        <FaqSection />
-        <ContactSection
-          contacts={content.contacts}
-          courses={content.courses}
-          selectedCourseId={selectedCourseId}
+
+        <main className="flex-1">
+          <Hero />
+          <TrustStrip />
+          <WhySection />
+          <CoursesSection
+            courses={resolved.courses}
+            onSelectCourse={handleSelectCourse}
+          />
+          <MethodSection />
+          <BusinessSection onSelectBusiness={() => handleSelectCourse("corporate")} />
+          <StandardsSection />
+          <TeamSection team={resolved.team} />
+          <FaqSection />
+          <ContactSection
+            contacts={resolved.contacts}
+            courses={resolved.courses}
+            selectedCourseId={selectedCourseId}
+            onOpenPrivacy={() => setIsPrivacyOpen(true)}
+          />
+        </main>
+
+        <Footer
+          contacts={resolved.contacts}
           onOpenPrivacy={() => setIsPrivacyOpen(true)}
         />
-      </main>
 
-      <Footer
-        contacts={content.contacts}
-        onOpenPrivacy={() => setIsPrivacyOpen(true)}
-      />
-
-      <PrivacyModal
-        isOpen={isPrivacyOpen}
-        onClose={() => setIsPrivacyOpen(false)}
-      />
-    </div>
+        <PrivacyModal
+          isOpen={isPrivacyOpen}
+          onClose={() => setIsPrivacyOpen(false)}
+        />
+      </div>
     </>
+  );
+}
+
+export function PublicSite({
+  content,
+  locale = DEFAULT_LOCALE,
+  showAdminLink = true,
+}: PublicSiteProps) {
+  return (
+    <I18nProvider initialLocale={locale}>
+      <PublicSiteBody content={content} showAdminLink={showAdminLink} />
+    </I18nProvider>
   );
 }

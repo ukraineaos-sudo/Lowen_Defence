@@ -132,16 +132,36 @@ function trimStringAt(
   changes: MigrationChange[]
 ) {
   const value = obj[key];
-  if (typeof value !== "string") return;
-  const trimmed = value.trim();
-  if (trimmed === value) return;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed === value) return;
+    changes.push({
+      path: `${path}.${key}`,
+      from: value,
+      to: trimmed,
+      reason: "trimmed_whitespace",
+    });
+    obj[key] = trimmed;
+    return;
+  }
+
+  // Dual-shape LocalizedText: { uk, en? }
+  if (!isPlainObject(value) || typeof value.uk !== "string") return;
+  const next: { uk: string; en?: string } = { uk: value.uk.trim() };
+  let changed = next.uk !== value.uk;
+  if (typeof value.en === "string") {
+    const enTrimmed = value.en.trim();
+    if (enTrimmed) next.en = enTrimmed;
+    if (enTrimmed !== value.en) changed = true;
+  }
+  if (!changed) return;
   changes.push({
     path: `${path}.${key}`,
     from: value,
-    to: trimmed,
+    to: next,
     reason: "trimmed_whitespace",
   });
-  obj[key] = trimmed;
+  obj[key] = next;
 }
 
 function migrateImage(
@@ -202,17 +222,37 @@ function migrateCourse(
 
   if (Array.isArray(course.meta)) {
     course.meta = course.meta.map((item, metaIndex) => {
-      if (typeof item !== "string") return item;
-      const trimmed = item.trim();
-      if (trimmed !== item) {
-        changes.push({
-          path: `${path}.meta.${metaIndex}`,
-          from: item,
-          to: trimmed,
-          reason: "trimmed_whitespace",
-        });
+      if (typeof item === "string") {
+        const trimmed = item.trim();
+        if (trimmed !== item) {
+          changes.push({
+            path: `${path}.meta.${metaIndex}`,
+            from: item,
+            to: trimmed,
+            reason: "trimmed_whitespace",
+          });
+        }
+        return trimmed;
       }
-      return trimmed;
+      if (isPlainObject(item) && typeof item.uk === "string") {
+        const next: { uk: string; en?: string } = { uk: item.uk.trim() };
+        let changed = next.uk !== item.uk;
+        if (typeof item.en === "string") {
+          const enTrimmed = item.en.trim();
+          if (enTrimmed) next.en = enTrimmed;
+          if (enTrimmed !== item.en) changed = true;
+        }
+        if (changed) {
+          changes.push({
+            path: `${path}.meta.${metaIndex}`,
+            from: item,
+            to: next,
+            reason: "trimmed_whitespace",
+          });
+        }
+        return next;
+      }
+      return item;
     });
   }
 

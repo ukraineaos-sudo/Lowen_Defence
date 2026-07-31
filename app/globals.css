@@ -205,6 +205,87 @@ button, input, textarea, select {
   flex-shrink: 0;
 }
 
+/* UA|EN language toggle (public site) */
+.lang-toggle {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.lang-toggle button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: rgba(232, 243, 237, 0.88);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  min-height: 32px;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.lang-toggle button + button {
+  border-left: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.lang-toggle button.is-active {
+  background: #ffffff;
+  color: var(--green-950);
+}
+
+.lang-toggle button:hover:not(.is-active) {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.lang-toggle--footer {
+  border-color: rgba(169, 205, 184, 0.45);
+  align-self: center;
+}
+
+.lang-toggle--footer button {
+  color: #a9cdb8;
+  min-height: 28px;
+  padding: 4px 9px;
+}
+
+.lang-toggle--footer button.is-active {
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--green-950);
+}
+
+.lang-toggle-wrap--menu {
+  display: none;
+}
+
+@media (max-width: 991px) {
+  .lang-toggle-wrap--header {
+    display: none;
+  }
+
+  .lang-toggle-wrap--menu {
+    display: block;
+    width: 100%;
+    padding-top: 8px;
+  }
+
+  .lang-toggle-wrap--menu .lang-toggle {
+    width: 100%;
+  }
+
+  .lang-toggle-wrap--menu .lang-toggle button {
+    flex: 1;
+    min-height: 40px;
+  }
+}
+
 .admin-link {
   margin-left: 8px;
   padding-left: 18px;

@@ -10,6 +10,7 @@ import {
   isHoneypotTriggered,
 } from "@/lib/applications/form-guards";
 import { readSiteContent } from "@/lib/content/store";
+import { localizedUk } from "@/lib/i18n/localized";
 import { notifyApplicationByEmail } from "@/lib/mail/notify-application";
 import { clientIp, rateLimit } from "@/lib/security/rate-limit";
 
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
   const course = content.courses.find((c) => c.id === courseId);
   let courseTitleSnapshot: string;
   if (course) {
-    courseTitleSnapshot = course.title;
+    courseTitleSnapshot = localizedUk(course.title);
   } else if (courseId === "corporate") {
     courseTitleSnapshot = "Корпоративний тренінг «Безпекова обізнаність»";
   } else {
