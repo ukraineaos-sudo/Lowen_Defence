@@ -61,9 +61,21 @@ describe("CMS bilingual content", () => {
     expect(first?.tag).toBe("Ages 5–7");
   });
 
-  it("resolveSiteContent falls back to uk when en missing", () => {
+  it("resolveSiteContent uses default EN when stored dual has uk only (same course id)", () => {
     const content = structuredClone(defaultSiteContent);
     content.courses[0]!.title = { uk: "Лише українською" };
+    const resolved = resolveSiteContent(content, "en");
+    // course-1 є в default seed з EN — публічний EN береться звідти
+    expect(resolved.courses[0]!.title).toBe("First self-defence skills");
+  });
+
+  it("resolveSiteContent falls back to uk when no en in stored or default", () => {
+    const content = structuredClone(defaultSiteContent);
+    content.courses[0] = {
+      ...content.courses[0]!,
+      id: "course-unknown-no-default-en",
+      title: { uk: "Лише українською" },
+    };
     const resolved = resolveSiteContent(content, "en");
     expect(resolved.courses[0]!.title).toBe("Лише українською");
   });

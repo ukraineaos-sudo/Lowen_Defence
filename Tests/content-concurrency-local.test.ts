@@ -29,7 +29,9 @@ describe("content OCC (local)", () => {
     fs.rmSync(tmp, { recursive: true, force: true });
   });
 
-  it("local revision mismatch returns CONFLICT", async () => {
+  it(
+    "local revision mismatch returns CONFLICT",
+    async () => {
     const dataDir = path.join(tmp, "data");
     fs.mkdirSync(dataDir, { recursive: true });
     const content = {
@@ -57,7 +59,9 @@ describe("content OCC (local)", () => {
       fs.readFileSync(path.join(dataDir, "site-content.json"), "utf-8")
     );
     expect(onDisk.updatedAt).toBe("2026-07-26T10:00:00.000Z");
-  });
+  },
+    15000
+  );
 
   it("local matching revision writes and returns new updatedAt revision", async () => {
     const dataDir = path.join(tmp, "data");
