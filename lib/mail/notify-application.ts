@@ -25,6 +25,23 @@ function parseFrom(raw: string): { name?: string; email: string } | null {
   return null;
 }
 
+/** ISO → читабельна дата в Europe/Kyiv для листа. */
+function formatApplicationTimeKyiv(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const formatted = new Intl.DateTimeFormat("uk-UA", {
+    timeZone: "Europe/Kyiv",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(date);
+  return `${formatted} (Київ)`;
+}
+
 /** 1. Чи налаштовано Brevo (ключ + from/to). */
 export function isApplicationMailConfigured(): boolean {
   return Boolean(
@@ -59,6 +76,8 @@ export async function notifyApplicationByEmail(
     ? `${siteUrl.replace(/\/$/, "")}/admin/applications`
     : "/admin/applications";
 
+  const createdAtDisplay = formatApplicationTimeKyiv(application.createdAt);
+
   const subject = `Нова заявка: ${application.name} — ${application.courseTitleSnapshot}`;
   const textContent = [
     "Нова заявка з сайту Löwen Defence Україна",
@@ -68,7 +87,7 @@ export async function notifyApplicationByEmail(
     `Курс: ${application.courseTitleSnapshot}`,
     `Коментар: ${application.comment || "—"}`,
     `ID: ${application.id}`,
-    `Час: ${application.createdAt}`,
+    `Час: ${createdAtDisplay}`,
     "",
     `Адмінка: ${adminAppsUrl}`,
   ].join("\n");
@@ -80,7 +99,7 @@ export async function notifyApplicationByEmail(
     <p><strong>Курс:</strong> ${escapeHtml(application.courseTitleSnapshot)}</p>
     <p><strong>Коментар:</strong><br/>${escapeHtml(application.comment || "—").replace(/\n/g, "<br/>")}</p>
     <p><strong>ID:</strong> ${escapeHtml(application.id)}<br/>
-    <strong>Час:</strong> ${escapeHtml(application.createdAt)}</p>
+    <strong>Час:</strong> ${escapeHtml(createdAtDisplay)}</p>
     <p><a href="${escapeHtml(adminAppsUrl)}">Відкрити в адмінці</a></p>
   `.trim();
 
